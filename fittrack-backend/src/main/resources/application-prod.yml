@@ -1,0 +1,13 @@
+spring:
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    com.fittrack: INFO
+    org.springframework: WARN
+    org.hibernate.SQL: WARN
+
+server:
+  error:
+    include-stacktrace: never
