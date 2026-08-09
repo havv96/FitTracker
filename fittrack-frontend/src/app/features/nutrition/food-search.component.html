@@ -20,19 +20,8 @@
           [(ngModel)]="searchTerm"
           (ngModelChange)="onSearchChange()"
           i18n-placeholder="@@foodSearch.placeholder"
-          placeholder="Search foods, brands, categories…"
+          placeholder="Search foods or brands…"
         />
-      </div>
-
-      <div class="chip-row">
-        <button ft-chip [active]="!selectedCategory()" (click)="toggleCategory(null)" i18n="@@filter.allCategories">
-          All categories
-        </button>
-        @for (c of categories; track c) {
-          <button ft-chip [active]="selectedCategory() === c" (click)="toggleCategory(c)">
-            {{ c }}
-          </button>
-        }
       </div>
 
       @if (hasFilters()) {
@@ -79,7 +68,6 @@
             }
           </div>
           <div class="food-tags">
-            <ft-tag>{{ food.category }}</ft-tag>
             <span class="food-serving mono">{{ food.servingSize }} {{ food.servingUnit }}</span>
           </div>
           <div class="food-macros mono">

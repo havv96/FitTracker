@@ -3,6 +3,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProfileRequest, ProfileResponse } from '../../core/models/profile.model';
 import { ProfileService } from '../../core/services/profile.service';
+import { MetricsService } from '../../core/services/metrics.service';
 import { FtButtonComponent } from '../../shared/ui/ft-button.component';
 import { FtCardComponent } from '../../shared/ui/ft-card.component';
 import { FtEmptyStateComponent } from '../../shared/ui/ft-empty-state.component';
@@ -31,9 +32,11 @@ import { FtTagComponent } from '../../shared/ui/ft-tag.component';
 export class ProfileComponent implements OnInit {
   private fb = inject(FormBuilder);
   private profileService = inject(ProfileService);
+  private metricsService = inject(MetricsService);
 
   profileForm!: FormGroup;
   profile: ProfileResponse | null = null;
+  latestWeightKg: number | null = null;
   isEditMode = false;
   isLoading = false;
   errorMessage = '';
@@ -102,6 +105,15 @@ export class ProfileComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
+    this.metricsService.getBodyMetrics().subscribe({
+      next: (metrics) => {
+        this.latestWeightKg = this.pickLatestWeight(metrics);
+      },
+      error: () => {
+        this.latestWeightKg = null;
+      },
+    });
+
     this.profileService.getProfile().subscribe({
       next: (response) => {
         this.profile = response;
@@ -128,8 +140,14 @@ export class ProfileComponent implements OnInit {
       activityLevel: profile.activityLevel,
       weightGoal: profile.weightGoal,
       targetWeightKg: profile.targetWeightKg,
-      currentWeightKg: 70,
+      currentWeightKg: this.latestWeightKg,
     });
+  }
+
+  private pickLatestWeight(metrics: { date: string; weightKg: number }[]): number | null {
+    if (!metrics || metrics.length === 0) return null;
+    const sorted = [...metrics].sort((a, b) => (a.date < b.date ? 1 : -1));
+    return sorted[0]?.weightKg ?? null;
   }
 
   toggleEditMode(): void {
