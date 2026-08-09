@@ -3,6 +3,7 @@ package com.fittrack.repository;
 import com.fittrack.model.Workout;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +16,7 @@ import java.util.Optional;
 @Repository
 public interface WorkoutRepository extends JpaRepository<Workout, Long> {
 
+    @EntityGraph(attributePaths = {"sets", "sets.exercise"})
     List<Workout> findByUserIdAndWorkoutDateBetween(Long userId, LocalDate startDate, LocalDate endDate);
 
     Page<Workout> findByUserIdOrderByWorkoutDateDesc(Long userId, Pageable pageable);
@@ -33,6 +35,7 @@ public interface WorkoutRepository extends JpaRepository<Workout, Long> {
 
     Optional<Workout> findTopByUserIdOrderByWorkoutDateDesc(Long userId);
 
+    @EntityGraph(attributePaths = {"sets", "sets.exercise"})
     List<Workout> findByUserId(Long userId);
 
     List<Workout> findTop30ByUserIdOrderByWorkoutDateDesc(Long userId);

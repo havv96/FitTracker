@@ -9,7 +9,7 @@ import java.time.LocalDate;
 
 /**
  * Personal Record Response
- * Best performance for an exercise
+ * Best performance for an exercise, ranked by Epley estimated 1RM.
  */
 @Data
 @Builder
@@ -20,5 +20,7 @@ public class PersonalRecordResponse {
     private Double bestWeight;
     private Double bestVolume;
     private Integer bestReps;
+    /** Epley estimated one-rep max: weight * (1 + reps/30). */
+    private Double bestE1RM;
     private LocalDate achievedDate;
 }

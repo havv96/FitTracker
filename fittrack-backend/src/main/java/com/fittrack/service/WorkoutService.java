@@ -119,9 +119,8 @@ public class WorkoutService {
 
         return workouts.stream()
                 .map(workout -> {
-                    // Count unique exercises in this workout
-                    List<WorkoutSet> sets = setRepository.findByWorkoutIdOrderBySetNumberAsc(workout.getId());
-                    int uniqueExercises = (int) sets.stream()
+                    // Sets are eagerly loaded via @EntityGraph on the repository method.
+                    int uniqueExercises = (int) workout.getSets().stream()
                             .map(set -> set.getExercise().getId())
                             .distinct()
                             .count();
