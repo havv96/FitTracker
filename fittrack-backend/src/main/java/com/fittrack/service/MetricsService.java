@@ -37,7 +37,6 @@ public class MetricsService {
     private final NutritionLogRepository nutritionLogRepository;
     private final BodyMetricsRepository bodyMetricsRepository;
     private final WorkoutSetRepository workoutSetRepository;
-    private final UserRepository userRepository;
     private final NutritionCalculator nutritionCalculator;
 
     @Transactional
@@ -353,11 +352,8 @@ public class MetricsService {
     public BodyMetricsResponse addBodyMetrics(Long userId, BodyMetricsRequest request) {
         log.info("Adding body metrics for user ID: {} on date: {}", userId, request.getDate());
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
         BodyMetrics metrics = BodyMetrics.builder()
-                .user(user)
+                .userId(userId)
                 .date(request.getDate())
                 .weightKg(request.getWeightKg())
                 .bodyFatPercentage(request.getBodyFatPercentage())
@@ -378,7 +374,7 @@ public class MetricsService {
         BodyMetrics metrics = bodyMetricsRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Body metrics not found"));
 
-        if (!metrics.getUser().getId().equals(userId)) {
+        if (!metrics.getUserId().equals(userId)) {
             throw new ResourceNotFoundException("Body metrics not found for this user");
         }
 
@@ -401,7 +397,7 @@ public class MetricsService {
         BodyMetrics metrics = bodyMetricsRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Body metrics not found"));
 
-        if (!metrics.getUser().getId().equals(userId)) {
+        if (!metrics.getUserId().equals(userId)) {
             throw new ResourceNotFoundException("Body metrics not found for this user");
         }
 
@@ -411,7 +407,7 @@ public class MetricsService {
     private BodyMetricsResponse convertToBodyMetricsResponse(BodyMetrics metrics) {
         return BodyMetricsResponse.builder()
                 .id(metrics.getId())
-                .userId(metrics.getUser().getId())
+                .userId(metrics.getUserId())
                 .date(metrics.getDate())
                 .weightKg(metrics.getWeightKg())
                 .bodyFatPercentage(metrics.getBodyFatPercentage())

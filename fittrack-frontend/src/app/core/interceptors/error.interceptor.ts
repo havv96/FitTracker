@@ -1,11 +1,16 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
+import { ToastService } from '../../shared/components/toast/toast.service';
 
 /**
- * Maps HTTP error statuses to user-friendly messages. 401 handling is owned by
- * authInterceptor (which tries refresh-and-retry); this interceptor never triggers a logout.
+ * Maps HTTP error statuses to user-friendly messages and surfaces them via ToastService.
+ * 401 handling is owned by authInterceptor (refresh-and-retry) — we suppress toasts on 401
+ * so a transparent refresh doesn't flash "Session expired" at the user.
  */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
+  const toast = inject(ToastService);
+
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       let errorMessage = 'An unexpected error occurred';
@@ -51,6 +56,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         message: errorMessage,
         url: req.url
       });
+
+      if (error.status !== 401) {
+        toast.error(errorMessage);
+      }
 
       return throwError(() => ({
         status: error.status,

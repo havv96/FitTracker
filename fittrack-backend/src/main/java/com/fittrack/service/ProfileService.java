@@ -3,11 +3,9 @@ package com.fittrack.service;
 import com.fittrack.dto.request.ProfileRequest;
 import com.fittrack.dto.response.ProfileResponse;
 import com.fittrack.exception.ResourceNotFoundException;
-import com.fittrack.model.User;
 import com.fittrack.model.UserProfile;
 import com.fittrack.repository.DailyStatsRepository;
 import com.fittrack.repository.UserProfileRepository;
-import com.fittrack.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,7 +19,6 @@ import java.math.BigDecimal;
 public class ProfileService {
 
     private final UserProfileRepository profileRepository;
-    private final UserRepository userRepository;
     private final DailyStatsRepository dailyStatsRepository;
     private final NutritionCalculator nutritionCalculator;
 
@@ -29,11 +26,8 @@ public class ProfileService {
     public ProfileResponse createOrUpdateProfile(Long userId, ProfileRequest request) {
         log.info("Creating/updating profile for user ID: {}", userId);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
         UserProfile profile = profileRepository.findByUserId(userId)
-                .orElse(UserProfile.builder().user(user).build());
+                .orElse(UserProfile.builder().userId(userId).build());
 
         profile.setHeightCm(request.getHeightCm());
         profile.setDateOfBirth(request.getDateOfBirth());
@@ -93,7 +87,7 @@ public class ProfileService {
     private ProfileResponse toResponse(UserProfile profile, ProfileResponse.MetricsCalculation calculations) {
         return ProfileResponse.builder()
                 .id(profile.getId())
-                .userId(profile.getUser().getId())
+                .userId(profile.getUserId())
                 .heightCm(profile.getHeightCm())
                 .dateOfBirth(profile.getDateOfBirth())
                 .gender(profile.getGender())

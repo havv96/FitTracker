@@ -22,7 +22,7 @@ public interface BodyMetricsRepository extends JpaRepository<BodyMetrics, Long> 
 
     Optional<BodyMetrics> findByUserIdAndDate(Long userId, LocalDate date);
 
-    @Query("SELECT b FROM BodyMetrics b WHERE b.user.id = :userId ORDER BY b.date DESC")
+    @Query("SELECT b FROM BodyMetrics b WHERE b.userId = :userId ORDER BY b.date DESC")
     List<BodyMetrics> findLatestByUserId(@Param("userId") Long userId);
 
     Optional<BodyMetrics> findFirstByUserIdOrderByDateDesc(Long userId);

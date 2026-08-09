@@ -44,10 +44,7 @@ public class AuthService {
             throw new UserAlreadyExistsException("Email already in use");
         }
 
-        // AC: Validate password complexity (handled by @Pattern in DTO, but double-check)
-        validatePassword(request.getPassword());
-
-        // AC: Hash password with BCrypt
+        // AC: Hash password with BCrypt (complexity enforced by @Pattern/@Size on RegisterRequest)
         String hashedPassword = passwordEncoder.encode(request.getPassword());
 
         // Create user
@@ -142,20 +139,5 @@ public class AuthService {
                 .email(user.getEmail())
                 .userId(user.getId())
                 .build();
-    }
-
-    /**
-     * Validate password complexity
-     */
-    private void validatePassword(String password) {
-        if (password.length() < 8) {
-            throw new IllegalArgumentException("Password must be at least 8 characters");
-        }
-        if (!password.matches(".*[A-Z].*")) {
-            throw new IllegalArgumentException("Password must contain at least 1 uppercase letter");
-        }
-        if (!password.matches(".*[0-9].*")) {
-            throw new IllegalArgumentException("Password must contain at least 1 digit");
-        }
     }
 }
