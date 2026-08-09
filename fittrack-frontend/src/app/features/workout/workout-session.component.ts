@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormsModule, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { WorkoutService } from '../../core/services/workout.service';
+import { ToastService } from '../../shared/components/toast/toast.service';
+import { ConfirmDialogService } from '../../shared/components/confirm-dialog/confirm-dialog.service';
 import {
   Exercise,
   WorkoutSetRequest,
@@ -19,6 +21,8 @@ import {
 export class WorkoutSessionComponent implements OnInit, OnDestroy {
   private workoutService = inject(WorkoutService);
   private fb = inject(FormBuilder);
+  private toast = inject(ToastService);
+  private confirmDialog = inject(ConfirmDialogService);
 
   // Workout state
   currentWorkout = this.workoutService.currentWorkout;
@@ -38,7 +42,7 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy {
   restTimerActive = signal<boolean>(false);
   restTimerPaused = signal<boolean>(false);
   restTimeRemaining = signal<number>(90); // 90 seconds default
-  private restTimerInterval: any;
+  private restTimerInterval: ReturnType<typeof setInterval> | null = null;
   private workoutStartTime: Date | null = null;
 
   // Computed
@@ -207,6 +211,7 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy {
   stopRestTimer(): void {
     if (this.restTimerInterval) {
       clearInterval(this.restTimerInterval);
+      this.restTimerInterval = null;
     }
     this.restTimerActive.set(false);
     this.restTimerPaused.set(false);
@@ -218,12 +223,15 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
 
-  confirmFinishWorkout(): void {
-    if (!confirm('Are you sure you want to finish this workout?')) {
-      return;
+  async confirmFinishWorkout(): Promise<void> {
+    const confirmed = await this.confirmDialog.confirm({
+      title: 'Finish workout?',
+      message: 'Are you sure you want to finish this workout?',
+      confirmText: 'Finish'
+    });
+    if (confirmed) {
+      this.finishWorkout();
     }
-
-    this.finishWorkout();
   }
 
   finishWorkout(): void {
@@ -239,7 +247,7 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy {
         this.selectedExerciseId = null;
         this.selectedExercise.set(null);
         this.previousSets.set([]);
-        alert('Workout completed successfully!');
+        this.toast.success('Workout completed successfully!');
       },
       error: (err) => {
         this.error.set('Failed to finish workout');
@@ -247,10 +255,5 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy {
         console.error('Error finishing workout:', err);
       }
     });
-  }
-
-  browseExercises(): void {
-    // TODO: Navigate to exercise list or open modal
-    alert('Exercise browser coming soon!');
   }
 }

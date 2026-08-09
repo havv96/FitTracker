@@ -1,8 +1,10 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { NutritionService } from '../../core/services/nutrition.service';
+import { ToastService } from '../../shared/components/toast/toast.service';
 import {
   FoodItem,
   FoodCategory,
@@ -22,6 +24,8 @@ export class FoodSearchComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
+  private toast = inject(ToastService);
+  private destroyRef = inject(DestroyRef);
 
   // State
   foods = signal<FoodItem[]>([]);
@@ -51,7 +55,7 @@ export class FoodSearchComponent implements OnInit {
   logForm: FormGroup;
 
   // Debounce timer
-  private searchDebounceTimer: any;
+  private searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     this.logForm = this.fb.group({
@@ -61,15 +65,16 @@ export class FoodSearchComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Get query params
-    this.route.queryParams.subscribe(params => {
-      this.targetMealType = params['mealType'];
-      this.targetDate = params['date'];
+    this.route.queryParams
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        this.targetMealType = params['mealType'];
+        this.targetDate = params['date'];
 
-      if (this.targetMealType) {
-        this.logForm.patchValue({ mealType: this.targetMealType });
-      }
-    });
+        if (this.targetMealType) {
+          this.logForm.patchValue({ mealType: this.targetMealType });
+        }
+      });
 
     this.searchFood();
   }
@@ -98,8 +103,8 @@ export class FoodSearchComponent implements OnInit {
     });
   }
 
-  onSearchChange(term: string): void {
-    clearTimeout(this.searchDebounceTimer);
+  onSearchChange(): void {
+    if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
     this.searchDebounceTimer = setTimeout(() => {
       this.currentPage.set(0);
       this.searchFood();
@@ -152,7 +157,7 @@ export class FoodSearchComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.logging.set(false);
-        alert('Food logged successfully!');
+        this.toast.success('Food logged successfully!');
         this.goBack();
       },
       error: (err) => {
@@ -173,11 +178,6 @@ export class FoodSearchComponent implements OnInit {
     const food = this.selectedFood();
     if (!food) return 0;
     return Math.round(food[macro] * this.logForm.value.servings * 10) / 10;
-  }
-
-  showCustomFoodForm(): void {
-    // TODO: Implement custom food creation
-    alert('Custom food creation coming soon!');
   }
 
   previousPage(): void {

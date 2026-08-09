@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WorkoutService } from '../../core/services/workout.service';
@@ -35,7 +35,7 @@ export class ExerciseListComponent implements OnInit {
   equipmentTypes = Object.values(EquipmentType);
 
   // Debounce timer for search
-  private searchDebounceTimer: any;
+  private searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit(): void {
     this.loadExercises();
@@ -65,9 +65,8 @@ export class ExerciseListComponent implements OnInit {
     });
   }
 
-  onSearchChange(term: string): void {
-    // Debounce search input
-    clearTimeout(this.searchDebounceTimer);
+  onSearchChange(): void {
+    if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
     this.searchDebounceTimer = setTimeout(() => {
       this.currentPage.set(0);
       this.loadExercises();
@@ -97,16 +96,6 @@ export class ExerciseListComponent implements OnInit {
 
   closeDetails(): void {
     this.selectedExercise.set(null);
-  }
-
-  addToWorkout(): void {
-    const exercise = this.selectedExercise();
-    if (exercise) {
-      // TODO: Emit event to parent component or navigate to workout session
-      console.log('Adding to workout:', exercise);
-      alert(`Added ${exercise.name} to workout!`);
-      this.closeDetails();
-    }
   }
 
   previousPage(): void {

@@ -28,8 +28,6 @@ public interface NutritionLogRepository extends JpaRepository<NutritionLog, Long
     @Query("SELECT SUM(n.totalFatG) FROM NutritionLog n WHERE n.userId = :userId AND n.logDate = :date")
     Double getTotalFatForDate(@Param("userId") Long userId, @Param("date") LocalDate date);
 
-    void deleteByUserIdAndId(Long userId, Long id);
-
     @Query("SELECT SUM(n.totalCalories) FROM NutritionLog n WHERE n.userId = :userId AND n.logDate BETWEEN :startDate AND :endDate")
     Double getTotalCaloriesBetweenDates(@Param("userId") Long userId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 

@@ -1,10 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, catchError, throwError, switchMap } from 'rxjs';
+import { BehaviorSubject, Observable, of, tap, catchError, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginRequest, RegisterRequest, User } from '../models/auth.model';
 
+/**
+ * Auth service. Access token lives in memory only. Refresh token is set by the backend
+ * as an HttpOnly + Secure + SameSite=Strict cookie and never touched by JS.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -12,165 +16,91 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
 
-  private currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
+  private accessToken: string | null = null;
+
+  private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  private readonly TOKEN_KEY = 'access_token';
-  private readonly REFRESH_TOKEN_KEY = 'refresh_token';
-  private readonly USER_KEY = 'current_user';
-
-  private isRefreshing = false;
-  private refreshTokenSubject = new BehaviorSubject<string | null>(null);
-
-  /**
-   * Register new user
-   */
   register(request: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${environment.apiBaseUrl}/auth/register`, request)
-      .pipe(
-        tap(response => this.handleAuthResponse(response))
-      );
+    return this.http.post<AuthResponse>(
+      `${environment.apiBaseUrl}/auth/register`,
+      request,
+      { withCredentials: true }
+    ).pipe(
+      tap(response => this.handleAuthResponse(response))
+    );
   }
 
-  /**
-   * Login user
-   */
   login(request: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${environment.apiBaseUrl}/auth/login`, request)
-      .pipe(
-        tap(response => this.handleAuthResponse(response))
-      );
+    return this.http.post<AuthResponse>(
+      `${environment.apiBaseUrl}/auth/login`,
+      request,
+      { withCredentials: true }
+    ).pipe(
+      tap(response => this.handleAuthResponse(response))
+    );
   }
 
-  /**
-   * Logout user
-   */
   logout(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-    localStorage.removeItem(this.USER_KEY);
-    this.currentUserSubject.next(null);
-    this.router.navigate(['/auth/login']);
+    this.http.post<void>(
+      `${environment.apiBaseUrl}/auth/logout`,
+      null,
+      { withCredentials: true }
+    ).subscribe({
+      complete: () => this.clearLocalSession(),
+      error: () => this.clearLocalSession()
+    });
   }
 
-  /**
-   * Get access token
-   */
   getAccessToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    return this.accessToken;
   }
 
-  /**
-   * Get refresh token
-   */
-  getRefreshToken(): string | null {
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
-  }
-
-  /**
-   * Check if user is authenticated
-   */
   isAuthenticated(): boolean {
-    return !!this.getAccessToken();
+    return this.accessToken !== null;
   }
 
-  /**
-   * Get current user
-   */
   getCurrentUser(): User | null {
     return this.currentUserSubject.value;
   }
 
-  /**
-   * Handle authentication response
-   */
-  private handleAuthResponse(response: AuthResponse): void {
-    localStorage.setItem(this.TOKEN_KEY, response.accessToken);
-    localStorage.setItem(this.REFRESH_TOKEN_KEY, response.refreshToken);
-
-    const user: User = {
-      id: response.userId,
-      email: response.email
-    };
-
-    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-    this.currentUserSubject.next(user);
-  }
-
-  /**
-   * Get user from local storage
-   */
-  private getUserFromStorage(): User | null {
-    const userJson = localStorage.getItem(this.USER_KEY);
-    return userJson ? JSON.parse(userJson) : null;
-  }
-
-  /**
-   * Refresh access token using refresh token
-   */
   refreshToken(): Observable<AuthResponse> {
-    const refreshToken = this.getRefreshToken();
-
-    if (!refreshToken) {
-      this.logout();
-      return throwError(() => new Error('No refresh token available'));
-    }
-
-    return this.http.post<AuthResponse>(`${environment.apiBaseUrl}/auth/refresh`, {
-      refreshToken: refreshToken
-    }).pipe(
-      tap(response => {
-        // Update tokens in storage
-        localStorage.setItem(this.TOKEN_KEY, response.accessToken);
-        localStorage.setItem(this.REFRESH_TOKEN_KEY, response.refreshToken);
-
-        // Update user if needed
-        const user: User = {
-          id: response.userId,
-          email: response.email
-        };
-        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-        this.currentUserSubject.next(user);
-      }),
+    return this.http.post<AuthResponse>(
+      `${environment.apiBaseUrl}/auth/refresh`,
+      null,
+      { withCredentials: true }
+    ).pipe(
+      tap(response => this.handleAuthResponse(response)),
       catchError(error => {
-        // If refresh fails, logout user
-        this.logout();
+        this.clearLocalSession();
         return throwError(() => error);
       })
     );
   }
 
   /**
-   * Handle token refresh for concurrent requests
-   * This ensures only one refresh request is made even if multiple requests fail simultaneously
+   * Called from APP_INITIALIZER on app boot. Attempts to hydrate a session from the
+   * HttpOnly refresh cookie. Returns without erroring so the app can start even for
+   * logged-out users.
    */
-  handleTokenRefresh(): Observable<string> {
-    if (!this.isRefreshing) {
-      this.isRefreshing = true;
-      this.refreshTokenSubject.next(null);
+  restoreSession(): Observable<AuthResponse | null> {
+    return this.refreshToken().pipe(
+      catchError(() => of(null))
+    );
+  }
 
-      return this.refreshToken().pipe(
-        switchMap((response: AuthResponse) => {
-          this.isRefreshing = false;
-          this.refreshTokenSubject.next(response.accessToken);
-          return throwError(() => new Error('Token refreshed, retry request'));
-        }),
-        catchError(error => {
-          this.isRefreshing = false;
-          this.logout();
-          return throwError(() => error);
-        })
-      );
-    } else {
-      // Wait for the refresh to complete
-      return this.refreshTokenSubject.pipe(
-        switchMap(token => {
-          if (token) {
-            return throwError(() => new Error('Token refreshed, retry request'));
-          }
-          return throwError(() => new Error('Token refresh in progress'));
-        })
-      );
-    }
+  private handleAuthResponse(response: AuthResponse): void {
+    this.accessToken = response.accessToken;
+    const user: User = {
+      id: response.userId,
+      email: response.email
+    };
+    this.currentUserSubject.next(user);
+  }
+
+  private clearLocalSession(): void {
+    this.accessToken = null;
+    this.currentUserSubject.next(null);
+    this.router.navigate(['/auth/login']);
   }
 }

@@ -10,7 +10,7 @@ import { ProfileRequest, ProfileResponse } from '../../core/models/profile.model
   standalone: true,
   imports: [CommonModule, RouterLink, ReactiveFormsModule],
   templateUrl: './profile.component.html',
-  styleUrls: ['./profile.component.css']
+  styleUrls: ['./profile.component.scss']
 })
 export class ProfileComponent implements OnInit {
   private fb = inject(FormBuilder);

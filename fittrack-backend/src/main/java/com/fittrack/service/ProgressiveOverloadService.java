@@ -3,8 +3,10 @@ package com.fittrack.service;
 import com.fittrack.dto.response.OverloadSuggestion;
 import com.fittrack.model.WorkoutSet;
 import com.fittrack.repository.WorkoutSetRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,16 +21,12 @@ import java.util.OptionalDouble;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ProgressiveOverloadService {
 
-    @Autowired
-    private WorkoutSetRepository setRepository;
+    private final WorkoutSetRepository setRepository;
+    private final MessageSource messages;
 
-    /**
-     * US-15: Check for progressive overload opportunity
-     * AC: If same reps and weight with RPE < 7, suggest weight increase
-     * AC: Recommend +2.5kg for upper body, +5kg for lower body
-     */
     @Transactional(readOnly = true)
     public OverloadSuggestion checkForOverloadOpportunity(Long userId, Long exerciseId,
                                                            int currentReps, double currentWeight,
@@ -36,15 +34,13 @@ public class ProgressiveOverloadService {
         log.info("Checking overload opportunity for user {} on exercise {} (reps: {}, weight: {}, rpe: {})",
                 userId, exerciseId, currentReps, currentWeight, currentRpe);
 
-        // Get last workout data for the same exercise
         List<WorkoutSet> previousSets = setRepository.findLastWorkoutForExercise(userId, exerciseId);
 
         if (previousSets.isEmpty()) {
             log.debug("No previous workout data found for exercise {}", exerciseId);
-            return null; // No previous data to compare
+            return null;
         }
 
-        // Calculate average performance from previous workout
         OptionalDouble avgPreviousReps = previousSets.stream()
                 .filter(set -> set.getReps() != null)
                 .mapToInt(WorkoutSet::getReps)
@@ -61,14 +57,13 @@ public class ProgressiveOverloadService {
                 .average();
 
         if (avgPreviousReps.isEmpty() || avgPreviousWeight.isEmpty()) {
-            return null; // Insufficient data
+            return null;
         }
 
         double prevReps = avgPreviousReps.getAsDouble();
         double prevWeight = avgPreviousWeight.getAsDouble();
         double prevRpe = avgPreviousRpe.isPresent() ? avgPreviousRpe.getAsDouble() : 5.0;
 
-        // AC: Check if performance is same or better
         boolean sameOrBetterReps = currentReps >= Math.round(prevReps);
         boolean sameWeight = Math.abs(currentWeight - prevWeight) < 0.1;
         boolean easyRpe = currentRpe < 7;
@@ -77,17 +72,14 @@ public class ProgressiveOverloadService {
                 currentReps, currentWeight, currentRpe,
                 Math.round(prevReps), Math.round(prevWeight), Math.round(prevRpe));
 
-        // AC: If same reps/weight but low RPE, suggest weight increase
         if (sameOrBetterReps && sameWeight && easyRpe) {
-            // Determine weight increment (2.5kg for upper body, 5kg for lower body)
-            // Simplified: use 2.5kg increment for all exercises
             double increment = 2.5;
             double suggestedWeight = currentWeight + increment;
 
             OverloadSuggestion suggestion = new OverloadSuggestion();
-            suggestion.setMessage("Опитай " + suggestedWeight + "kg днес?");
+            suggestion.setMessage(msg("overload.weight_increase.message", suggestedWeight));
             suggestion.setSuggestedWeight(BigDecimal.valueOf(suggestedWeight));
-            suggestion.setReason("Последния път беше с RPE " + currentRpe + " - време е за прогрес!");
+            suggestion.setReason(msg("overload.weight_increase.reason", currentRpe));
             suggestion.setProgressionType(OverloadSuggestion.ProgressionType.WEIGHT_INCREASE);
             suggestion.setPreviousReps((int) Math.round(prevReps));
             suggestion.setPreviousWeight(BigDecimal.valueOf(prevWeight));
@@ -97,14 +89,13 @@ public class ProgressiveOverloadService {
             return suggestion;
         }
 
-        // AC: If hitting higher RPE (8-10), suggest rep increase instead
         if (sameWeight && currentRpe >= 8 && currentReps < 12) {
             int suggestedReps = currentReps + 2;
 
             OverloadSuggestion suggestion = new OverloadSuggestion();
-            suggestion.setMessage("Опитай " + suggestedReps + " повторения!");
-            suggestion.setSuggestedWeight(BigDecimal.valueOf(currentWeight)); // Keep weight same
-            suggestion.setReason("RPE " + currentRpe + " е добър! Добави още повторения.");
+            suggestion.setMessage(msg("overload.rep_increase.message", suggestedReps));
+            suggestion.setSuggestedWeight(BigDecimal.valueOf(currentWeight));
+            suggestion.setReason(msg("overload.rep_increase.reason", currentRpe));
             suggestion.setProgressionType(OverloadSuggestion.ProgressionType.REP_INCREASE);
             suggestion.setPreviousReps((int) Math.round(prevReps));
             suggestion.setPreviousWeight(BigDecimal.valueOf(prevWeight));
@@ -114,15 +105,10 @@ public class ProgressiveOverloadService {
             return suggestion;
         }
 
-        // No suggestion - either progressing naturally or need recovery
         log.debug("No overload suggestion - current performance is appropriate");
         return null;
     }
 
-    /**
-     * Get progressive overload suggestion based on recent performance
-     * Analyzes last 2-3 workouts for the exercise
-     */
     @Transactional(readOnly = true)
     public OverloadSuggestion getProgressionSuggestion(Long userId, Long exerciseId) {
         log.info("Getting progression suggestion for user {} on exercise {}", userId, exerciseId);
@@ -133,7 +119,6 @@ public class ProgressiveOverloadService {
             return null;
         }
 
-        // Take the most recent set as baseline
         WorkoutSet lastSet = recentSets.get(0);
 
         if (lastSet.getReps() == null || lastSet.getWeightKg() == null) {
@@ -149,5 +134,9 @@ public class ProgressiveOverloadService {
                 lastSet.getWeightKg().doubleValue(),
                 rpe
         );
+    }
+
+    private String msg(String key, Object... args) {
+        return messages.getMessage(key, args, LocaleContextHolder.getLocale());
     }
 }

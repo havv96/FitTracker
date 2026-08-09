@@ -202,11 +202,11 @@ class WorkoutServiceTest {
 
     @Test
     void testGetWorkoutHistory_Success() {
-        // Arrange
+        // Arrange — sets are now eagerly loaded via @EntityGraph, so the service reads
+        // them from workout.getSets() directly rather than making a separate query.
         List<Workout> workouts = List.of(workout);
         when(workoutRepository.findByUserIdAndWorkoutDateBetween(anyLong(), any(LocalDate.class), any(LocalDate.class)))
             .thenReturn(workouts);
-        when(workoutSetRepository.findByWorkoutIdOrderBySetNumberAsc(anyLong())).thenReturn(new ArrayList<>());
 
         // Act
         List<WorkoutHistoryResponse> responses = workoutService.getWorkoutHistory(1L, LocalDate.now().minusDays(7), LocalDate.now());
@@ -217,6 +217,7 @@ class WorkoutServiceTest {
         assertEquals(1L, responses.get(0).getId());
 
         verify(workoutRepository).findByUserIdAndWorkoutDateBetween(anyLong(), any(LocalDate.class), any(LocalDate.class));
+        verify(workoutSetRepository, never()).findByWorkoutIdOrderBySetNumberAsc(anyLong());
     }
 
     @Test

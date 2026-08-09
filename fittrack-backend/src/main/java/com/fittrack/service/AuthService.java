@@ -8,8 +8,8 @@ import com.fittrack.exception.UserAlreadyExistsException;
 import com.fittrack.model.User;
 import com.fittrack.repository.UserRepository;
 import com.fittrack.security.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,19 +22,13 @@ import java.time.LocalDateTime;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class AuthService {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private JwtTokenProvider tokenProvider;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider tokenProvider;
+    private final AuthenticationManager authenticationManager;
 
     /**
      * Register a new user
@@ -50,10 +44,7 @@ public class AuthService {
             throw new UserAlreadyExistsException("Email already in use");
         }
 
-        // AC: Validate password complexity (handled by @Pattern in DTO, but double-check)
-        validatePassword(request.getPassword());
-
-        // AC: Hash password with BCrypt
+        // AC: Hash password with BCrypt (complexity enforced by @Pattern/@Size on RegisterRequest)
         String hashedPassword = passwordEncoder.encode(request.getPassword());
 
         // Create user
@@ -148,20 +139,5 @@ public class AuthService {
                 .email(user.getEmail())
                 .userId(user.getId())
                 .build();
-    }
-
-    /**
-     * Validate password complexity
-     */
-    private void validatePassword(String password) {
-        if (password.length() < 8) {
-            throw new IllegalArgumentException("Password must be at least 8 characters");
-        }
-        if (!password.matches(".*[A-Z].*")) {
-            throw new IllegalArgumentException("Password must contain at least 1 uppercase letter");
-        }
-        if (!password.matches(".*[0-9].*")) {
-            throw new IllegalArgumentException("Password must contain at least 1 digit");
-        }
     }
 }

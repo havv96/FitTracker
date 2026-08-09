@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { MetricsService } from '../../core/services/metrics.service';
 import { WorkoutService } from '../../core/services/workout.service';
 import { NutritionService } from '../../core/services/nutrition.service';
+import { ConfirmDialogService } from '../../shared/components/confirm-dialog/confirm-dialog.service';
 import {
   AnalyticsSummary,
   WeeklyProgress,
@@ -23,6 +24,7 @@ export class ProgressDashboardComponent implements OnInit {
   private metricsService = inject(MetricsService);
   private workoutService = inject(WorkoutService);
   private nutritionService = inject(NutritionService);
+  private confirmDialog = inject(ConfirmDialogService);
 
   // State
   summary = signal<AnalyticsSummary | null>(null);
@@ -118,10 +120,14 @@ export class ProgressDashboardComponent implements OnInit {
     this.editingMetric.set(undefined);
   }
 
-  deleteMetric(id: number): void {
-    if (!confirm('Are you sure you want to delete this entry?')) {
-      return;
-    }
+  async deleteMetric(id: number): Promise<void> {
+    const confirmed = await this.confirmDialog.confirm({
+      title: 'Delete entry?',
+      message: 'Are you sure you want to delete this entry?',
+      confirmText: 'Delete',
+      danger: true
+    });
+    if (!confirmed) return;
 
     this.metricsService.deleteBodyMetrics(id).subscribe({
       next: () => {

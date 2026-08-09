@@ -10,7 +10,7 @@
           <input
             type="text"
             [(ngModel)]="searchTerm"
-            (ngModelChange)="onSearchChange($event)"
+            (ngModelChange)="onSearchChange()"
             placeholder="Search exercises..."
             class="search-input"
           />
@@ -100,7 +100,6 @@
           </p>
         </div>
         <div class="actions">
-          <button (click)="addToWorkout()" class="btn-primary">Add to Workout</button>
           <button (click)="closeDetails()" class="btn-secondary">Close</button>
         </div>
       </div>

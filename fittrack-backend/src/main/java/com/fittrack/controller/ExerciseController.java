@@ -2,8 +2,8 @@ package com.fittrack.controller;
 
 import com.fittrack.model.Exercise;
 import com.fittrack.service.WorkoutService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,10 +15,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/exercises")
 @Slf4j
+@RequiredArgsConstructor
 public class ExerciseController {
 
-    @Autowired
-    private WorkoutService workoutService;
+    private final WorkoutService workoutService;
 
     @GetMapping
     public ResponseEntity<List<Exercise>> getAllExercises() {
