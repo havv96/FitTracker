@@ -131,7 +131,7 @@
 - **Testing**: JUnit 5, Mockito
 
 #### Frontend
-- **Framework**: Angular 17+ (Standalone Components)
+- **Framework**: Angular 20 (Standalone Components)
 - **Language**: TypeScript 5.0+
 - **State Management**: Signals (Angular's reactive primitives)
 - **Routing**: Lazy-loaded routes with guards
@@ -601,7 +601,7 @@ ng e2e
 
 ### Development Metrics
 - **Total Development Time**: ~40 hours
-- **Commits**: 100+ (estimated)
+- **Commits**: 1 (single baseline commit — full history to be built out)
 - **API Endpoints**: 12 functional
 - **Database Tables**: 7 with relationships
 - **Components**: 7 Angular + 4 Spring controllers
@@ -628,7 +628,7 @@ ng e2e
 
 ### Learning Outcomes
 1. **Full-Stack Development**: Complete understanding of backend-frontend integration
-2. **Modern Frameworks**: Experience with Spring Boot 3 and Angular 17+
+2. **Modern Frameworks**: Experience with Spring Boot 3 and Angular 20
 3. **Database Design**: Normalized schema with proper relationships
 4. **Security**: JWT authentication implementation
 5. **DevOps**: Docker containerization and deployment strategies
@@ -729,7 +729,7 @@ ng e2e
 
 ### Key Strengths
 1. **Production-Ready**: Fully functional MVP with polished UI
-2. **Modern Stack**: Latest Spring Boot 3.2 and Angular 17+
+2. **Modern Stack**: Latest Spring Boot 3.2 and Angular 20
 3. **Security**: Proper JWT authentication with refresh tokens
 4. **Performance**: Optimized queries and lazy loading
 5. **Scalability**: Microservice-ready architecture

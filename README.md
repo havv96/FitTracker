@@ -2,6 +2,8 @@
 
 A full-stack web application for tracking workouts, nutrition, and fitness progress built with Spring Boot and Angular.
 
+> **Documentation:** Detailed guides live in [`docs/`](docs/README.md). For the authoritative project status see [`docs/CURRENT_STATUS.md`](docs/CURRENT_STATUS.md).
+
 ## 🎯 Features
 
 ### ✅ Phase 1: Foundation & Authentication
@@ -36,7 +38,7 @@ A full-stack web application for tracking workouts, nutrition, and fitness progr
 - **Build**: Maven
 
 ### Frontend
-- **Framework**: Angular 17+ (Standalone Components)
+- **Framework**: Angular 20 (Standalone Components)
 - **State Management**: Signals
 - **Routing**: Lazy-loaded routes
 - **HTTP**: Interceptors for auth & error handling
