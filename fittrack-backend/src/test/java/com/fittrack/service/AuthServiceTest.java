@@ -3,6 +3,8 @@ package com.fittrack.service;
 import com.fittrack.dto.request.LoginRequest;
 import com.fittrack.dto.request.RegisterRequest;
 import com.fittrack.dto.response.AuthResponse;
+import com.fittrack.exception.InvalidCredentialsException;
+import com.fittrack.exception.UserAlreadyExistsException;
 import com.fittrack.model.User;
 import com.fittrack.repository.UserRepository;
 import com.fittrack.security.JwtTokenProvider;
@@ -59,7 +61,7 @@ class AuthServiceTest {
         user.setId(1L);
         user.setEmail("test@example.com");
         user.setPasswordHash("hashedPassword");
-        user.setRole(User.Role.USER);
+        user.setRole("USER");
     }
 
     @Test
@@ -94,11 +96,11 @@ class AuthServiceTest {
         when(userRepository.existsByEmail(anyString())).thenReturn(true);
 
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        UserAlreadyExistsException exception = assertThrows(UserAlreadyExistsException.class, () -> {
             authService.register(registerRequest);
         });
 
-        assertTrue(exception.getMessage().contains("Email already registered"));
+        assertTrue(exception.getMessage().contains("Email already in use"));
         verify(userRepository).existsByEmail("test@example.com");
         verify(userRepository, never()).save(any(User.class));
     }
@@ -138,11 +140,11 @@ class AuthServiceTest {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        InvalidCredentialsException exception = assertThrows(InvalidCredentialsException.class, () -> {
             authService.login(loginRequest);
         });
 
-        assertTrue(exception.getMessage().contains("User not found"));
+        assertTrue(exception.getMessage().contains("Invalid email or password"));
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(userRepository).findByEmail("test@example.com");
     }
@@ -153,14 +155,19 @@ class AuthServiceTest {
         String refreshToken = "validRefreshToken";
         when(jwtTokenProvider.validateToken(anyString())).thenReturn(true);
         when(jwtTokenProvider.getEmailFromToken(anyString())).thenReturn("test@example.com");
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
         when(jwtTokenProvider.generateAccessToken(anyString())).thenReturn("newAccessToken");
+        when(jwtTokenProvider.generateRefreshToken(anyString())).thenReturn("newRefreshToken");
 
         // Act
-        String newAccessToken = authService.refreshToken(refreshToken);
+        AuthResponse response = authService.refreshAccessToken(refreshToken);
 
         // Assert
-        assertNotNull(newAccessToken);
-        assertEquals("newAccessToken", newAccessToken);
+        assertNotNull(response);
+        assertEquals("newAccessToken", response.getAccessToken());
+        assertEquals("newRefreshToken", response.getRefreshToken());
+        assertEquals("test@example.com", response.getEmail());
+        assertEquals(1L, response.getUserId());
 
         verify(jwtTokenProvider).validateToken(refreshToken);
         verify(jwtTokenProvider).getEmailFromToken(refreshToken);
@@ -174,11 +181,11 @@ class AuthServiceTest {
         when(jwtTokenProvider.validateToken(anyString())).thenReturn(false);
 
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            authService.refreshToken(refreshToken);
+        InvalidCredentialsException exception = assertThrows(InvalidCredentialsException.class, () -> {
+            authService.refreshAccessToken(refreshToken);
         });
 
-        assertTrue(exception.getMessage().contains("Invalid refresh token"));
+        assertTrue(exception.getMessage().contains("Invalid or expired refresh token"));
         verify(jwtTokenProvider).validateToken(refreshToken);
         verify(jwtTokenProvider, never()).getEmailFromToken(anyString());
     }

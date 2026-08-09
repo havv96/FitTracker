@@ -380,10 +380,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK 17
+      - name: Set up JDK 25
         uses: actions/setup-java@v2
         with:
-          java-version: '17'
+          java-version: '25'
       - name: Run tests
         run: |
           cd fittrack-backend

@@ -49,7 +49,7 @@
 
 | Layer | Technology |
 |-------|-----------|
-| Backend | Spring Boot 3.2.0 / Java 17 |
+| Backend | Spring Boot 3.5.3 / Java 25 |
 | Frontend | Angular 20 (Standalone Components, Signals) |
 | Database | PostgreSQL 15 (Docker) |
 | Security | Spring Security + JWT |

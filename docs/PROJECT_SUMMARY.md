@@ -121,8 +121,8 @@
 ### Technology Stack
 
 #### Backend
-- **Framework**: Spring Boot 3.2.0
-- **Language**: Java 17
+- **Framework**: Spring Boot 3.5.3
+- **Language**: Java 25
 - **Database**: PostgreSQL 15 (Docker)
 - **ORM**: Hibernate/JPA
 - **Security**: Spring Security + JWT
@@ -636,7 +636,7 @@ ng e2e
 7. **Documentation**: Professional technical documentation
 
 ### Technologies Mastered
-- Java 17 with Spring Boot
+- Java 25 with Spring Boot
 - TypeScript with Angular
 - PostgreSQL database
 - Docker & Docker Compose

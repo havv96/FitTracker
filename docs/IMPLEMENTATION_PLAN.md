@@ -22,7 +22,7 @@
 ## 1. Project Overview
 
 ### 1.1 Technical Stack Summary
-- **Backend:** Java 17/21 with Spring Boot 3.x
+- **Backend:** Java 25 with Spring Boot 3.x
 - **Frontend:** Angular 17+ (Standalone Components + Signals)
 - **Database:** PostgreSQL 15+
 - **Security:** Spring Security + JWT (Access & Refresh Tokens)
@@ -43,7 +43,7 @@
 ### 2.1 Prerequisites Installation
 ```bash
 # Required Software
-- Java 17 or 21 (OpenJDK or Oracle JDK)
+- Java 25 (OpenJDK or Oracle JDK)
 - Node.js 18+ and npm 9+
 - PostgreSQL 15+
 - Docker Desktop
@@ -2273,13 +2273,13 @@ describe('LoginComponent', () => {
 #### Backend Dockerfile
 **File:** `fittrack-backend/Dockerfile`
 ```dockerfile
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM maven:3.9-eclipse-temurin-25 AS build
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 RUN mvn clean package -DskipTests
 
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/fittrack-backend-1.0.0.jar app.jar
 EXPOSE 8080
@@ -2358,10 +2358,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up JDK 17
+      - name: Set up JDK 25
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
+          java-version: '25'
           distribution: 'temurin'
       - name: Run tests
         run: |

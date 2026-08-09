@@ -26,16 +26,16 @@
 ### 1.1 Required Software
 
 #### Java Development Kit (JDK)
-- **Version:** JDK 17 or JDK 21 (LTS versions)
+- **Version:** JDK 25 (LTS)
 - **Download:** [OpenJDK](https://adoptium.net/) or [Oracle JDK](https://www.oracle.com/java/technologies/downloads/)
 
 **Installation Verification:**
 ```bash
 java -version
-# Should output: openjdk version "17.0.x" or "21.0.x"
+# Should output: openjdk version "25.0.x"
 
 javac -version
-# Should output: javac 17.0.x or 21.0.x
+# Should output: javac 25.0.x
 ```
 
 #### Node.js & npm
@@ -651,7 +651,7 @@ networks:
 Create `fittrack-backend/Dockerfile`:
 ```dockerfile
 # Stage 1: Build
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM maven:3.9-eclipse-temurin-25 AS build
 WORKDIR /app
 
 # Copy pom.xml and download dependencies
@@ -663,7 +663,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Runtime
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
 # Create non-root user

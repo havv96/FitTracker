@@ -29,8 +29,8 @@ A full-stack web application for tracking workouts, nutrition, and fitness progr
 ## 🏗️ Tech Stack
 
 ### Backend
-- **Framework**: Spring Boot 3.2.0
-- **Language**: Java 17
+- **Framework**: Spring Boot 3.5.3
+- **Language**: Java 25
 - **Database**: PostgreSQL 15
 - **Security**: Spring Security + JWT (HS256)
 - **ORM**: Hibernate/JPA
@@ -50,7 +50,7 @@ A full-stack web application for tracking workouts, nutrition, and fitness progr
 
 ## 📋 Prerequisites
 
-- **Java 17** or higher
+- **Java 25** or higher
 - **Node.js 18+** and npm
 - **Docker** and Docker Compose
 - **Maven 3.9+**

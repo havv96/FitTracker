@@ -15,7 +15,7 @@
 ## Local Development Setup
 
 ### Prerequisites
-- Java 17+
+- Java 25+
 - Node.js 18+
 - PostgreSQL 15+
 - Maven 3.9+
@@ -270,13 +270,13 @@ networks:
 #### Backend Dockerfile
 ```dockerfile
 # fittrack-backend/Dockerfile
-FROM eclipse-temurin:17-jdk-alpine AS build
+FROM eclipse-temurin:25-jdk-alpine AS build
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 RUN ./mvnw clean package -DskipTests
 
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
@@ -355,7 +355,7 @@ aws rds create-db-instance \
 ssh -i key.pem ec2-user@your-instance-ip
 
 # Install Java
-sudo yum install java-17-amazon-corretto
+sudo yum install java-25-amazon-corretto
 
 # Upload JAR
 scp -i key.pem target/fittrack-backend.jar ec2-user@your-instance-ip:~/
@@ -416,7 +416,7 @@ az postgres flexible-server create \
 az webapp up \
   --resource-group fittrack-rg \
   --name fittrack-backend \
-  --runtime "JAVA:17-java17" \
+  --runtime "JAVA:25-java25" \
   --sku B1
 
 # Deploy frontend
@@ -674,10 +674,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up JDK 17
+      - name: Set up JDK 25
         uses: actions/setup-java@v2
         with:
-          java-version: '17'
+          java-version: '25'
 
       - name: Build with Maven
         run: |

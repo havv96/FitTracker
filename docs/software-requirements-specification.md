@@ -12,7 +12,7 @@
 Целта е разработката на "FitTrack Pro" – уеб-базирано приложение (PWA) за цялостно проследяване на физическата активност и здраве. Приложението решава проблема с разпокъсаността на данните, като обединява тренировки, хранене, сън и хидратация в една платформа с интелигентни препоръки.
 
 ### 1.2 Технологичен Стек (Tech Stack)
-* **Backend:** Java 17/21 (Spring Boot 3.x)
+* **Backend:** Java 25 (Spring Boot 3.x)
 * **Frontend:** Angular 17+ (Standalone Components, Signals)
 * **Database:** PostgreSQL
 * **Security:** Spring Security + JWT (JSON Web Tokens)

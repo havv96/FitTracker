@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fittrack.dto.request.LoginRequest;
 import com.fittrack.dto.request.RegisterRequest;
 import com.fittrack.dto.response.AuthResponse;
+import com.fittrack.security.JwtTokenProvider;
 import com.fittrack.service.AuthService;
+import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +36,15 @@ class AuthControllerTest {
 
     @MockBean
     private AuthService authService;
+
+    @MockBean
+    private JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private UserDetailsService userDetailsService;
+
+    @MockBean
+    private JpaMetamodelMappingContext jpaMetamodelMappingContext;
 
     private RegisterRequest registerRequest;
     private LoginRequest loginRequest;
@@ -66,7 +78,7 @@ class AuthControllerTest {
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerRequest)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.accessToken").value("accessToken"))
                 .andExpect(jsonPath("$.refreshToken").value("refreshToken"))
                 .andExpect(jsonPath("$.email").value("test@example.com"))
@@ -147,7 +159,7 @@ class AuthControllerTest {
     void testRefreshToken_Success() throws Exception {
         // Arrange
         String refreshToken = "validRefreshToken";
-        when(authService.refreshToken(any(String.class))).thenReturn("newAccessToken");
+        when(authService.refreshAccessToken(any(String.class))).thenReturn(authResponse);
 
         // Act & Assert
         mockMvc.perform(post("/api/v1/auth/refresh")
@@ -155,6 +167,6 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken").value("newAccessToken"));
+                .andExpect(jsonPath("$.accessToken").value("accessToken"));
     }
 }

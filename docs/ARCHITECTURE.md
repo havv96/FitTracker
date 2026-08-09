@@ -11,7 +11,7 @@
 
 Системата FitTrack Pro ще бъде изградена с помощта на следния технологичен стек [2]:
 
-*   **Backend:** Java 17/21 (Spring Boot 3.x) [2]
+*   **Backend:** Java 25 (Spring Boot 3.x) [2]
 *   **Frontend:** Angular 17+ (използвайки Standalone Components и Signals) [2]
 *   **База данни:** PostgreSQL [2]
 *   **Сигурност:** Spring Security + JWT (JSON Web Tokens) [2]

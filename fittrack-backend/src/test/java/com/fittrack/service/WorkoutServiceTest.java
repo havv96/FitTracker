@@ -2,6 +2,8 @@ package com.fittrack.service;
 
 import com.fittrack.dto.request.WorkoutSetRequest;
 import com.fittrack.dto.request.WorkoutStartRequest;
+import com.fittrack.dto.response.WorkoutDetailResponse;
+import com.fittrack.dto.response.WorkoutHistoryResponse;
 import com.fittrack.dto.response.WorkoutResponse;
 import com.fittrack.dto.response.WorkoutSetResponse;
 import com.fittrack.exception.ExerciseNotFoundException;
@@ -58,12 +60,13 @@ class WorkoutServiceTest {
         workout.setUserId(1L);
         workout.setWorkoutDate(LocalDate.now());
         workout.setStartTime(LocalDateTime.now());
+        workout.setTotalVolume(BigDecimal.ZERO);
         workout.setSets(new ArrayList<>());
 
         exercise = new Exercise();
         exercise.setId(1L);
         exercise.setName("Bench Press");
-        exercise.setMuscleGroup(Exercise.MuscleGroup.CHEST);
+        exercise.setMuscleGroup("CHEST");
 
         workoutSet = new WorkoutSet();
         workoutSet.setId(1L);
@@ -113,7 +116,7 @@ class WorkoutServiceTest {
         when(workoutSetRepository.save(any(WorkoutSet.class))).thenReturn(workoutSet);
 
         // Act
-        WorkoutSetResponse response = workoutService.logSet(1L, 1L, setRequest);
+        WorkoutSetResponse response = workoutService.logSet(1L, setRequest, 1L);
 
         // Assert
         assertNotNull(response);
@@ -124,7 +127,7 @@ class WorkoutServiceTest {
         assertEquals(10, response.getReps());
         assertEquals(new BigDecimal("60.0"), response.getWeightKg());
         assertEquals(7, response.getRpe());
-        assertEquals(new BigDecimal("600.0"), response.getVolumeLoad());
+        assertEquals(600.0, response.getVolumeLoad());
 
         verify(workoutRepository).findByIdAndUserId(1L, 1L);
         verify(exerciseRepository).findById(1L);
@@ -138,7 +141,7 @@ class WorkoutServiceTest {
 
         // Act & Assert
         assertThrows(WorkoutNotFoundException.class, () -> {
-            workoutService.logSet(1L, 1L, setRequest);
+            workoutService.logSet(1L, setRequest, 1L);
         });
 
         verify(workoutRepository).findByIdAndUserId(1L, 1L);
@@ -154,7 +157,7 @@ class WorkoutServiceTest {
 
         // Act & Assert
         assertThrows(ExerciseNotFoundException.class, () -> {
-            workoutService.logSet(1L, 1L, setRequest);
+            workoutService.logSet(1L, setRequest, 1L);
         });
 
         verify(workoutRepository).findByIdAndUserId(1L, 1L);
@@ -167,6 +170,7 @@ class WorkoutServiceTest {
         // Arrange
         workout.getSets().add(workoutSet);
         when(workoutRepository.findByIdAndUserId(anyLong(), anyLong())).thenReturn(Optional.of(workout));
+        when(workoutSetRepository.findByWorkoutIdOrderBySetNumberAsc(1L)).thenReturn(List.of(workoutSet));
         when(workoutRepository.save(any(Workout.class))).thenReturn(workout);
 
         // Act
@@ -176,7 +180,7 @@ class WorkoutServiceTest {
         assertNotNull(response);
         assertNotNull(workout.getEndTime());
         assertEquals(new BigDecimal("600.0"), workout.getTotalVolume());
-        assertEquals(1, workout.getTotalSets());
+        assertEquals(1, response.getTotalSets());
 
         verify(workoutRepository).findByIdAndUserId(1L, 1L);
         verify(workoutRepository).save(workout);
@@ -202,9 +206,10 @@ class WorkoutServiceTest {
         List<Workout> workouts = List.of(workout);
         when(workoutRepository.findByUserIdAndWorkoutDateBetween(anyLong(), any(LocalDate.class), any(LocalDate.class)))
             .thenReturn(workouts);
+        when(workoutSetRepository.findByWorkoutIdOrderBySetNumberAsc(anyLong())).thenReturn(new ArrayList<>());
 
         // Act
-        List<WorkoutResponse> responses = workoutService.getWorkoutHistory(1L, LocalDate.now().minusDays(7), LocalDate.now());
+        List<WorkoutHistoryResponse> responses = workoutService.getWorkoutHistory(1L, LocalDate.now().minusDays(7), LocalDate.now());
 
         // Assert
         assertNotNull(responses);
@@ -219,9 +224,10 @@ class WorkoutServiceTest {
         // Arrange
         workout.getSets().add(workoutSet);
         when(workoutRepository.findByIdAndUserId(anyLong(), anyLong())).thenReturn(Optional.of(workout));
+        when(workoutSetRepository.findByWorkoutIdOrderBySetNumberAsc(anyLong())).thenReturn(List.of(workoutSet));
 
         // Act
-        WorkoutResponse response = workoutService.getWorkoutDetail(1L, 1L);
+        WorkoutDetailResponse response = workoutService.getWorkoutDetail(1L, 1L);
 
         // Assert
         assertNotNull(response);
