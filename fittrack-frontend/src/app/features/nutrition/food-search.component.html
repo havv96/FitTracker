@@ -11,7 +11,7 @@
         <input
           type="text"
           [(ngModel)]="searchTerm"
-          (ngModelChange)="onSearchChange($event)"
+          (ngModelChange)="onSearchChange()"
           placeholder="Search food items..."
           class="search-input"
         />
@@ -24,10 +24,6 @@
 
           <button (click)="clearFilters()" *ngIf="hasFilters()" class="btn-secondary">
             Clear
-          </button>
-
-          <button (click)="showCustomFoodForm()" class="btn-primary">
-            + Create Custom Food
           </button>
         </div>
       </div>
@@ -73,9 +69,6 @@
 
           <div *ngIf="foods().length === 0 && !loading()" class="no-results">
             <p>No food items found.</p>
-            <button (click)="showCustomFoodForm()" class="btn-primary">
-              Create Custom Food
-            </button>
           </div>
         </div>
 

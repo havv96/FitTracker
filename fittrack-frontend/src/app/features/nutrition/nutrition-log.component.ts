@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NutritionService } from '../../core/services/nutrition.service';
+import { ConfirmDialogService } from '../../shared/components/confirm-dialog/confirm-dialog.service';
 import {
   DailyNutritionSummary,
   MealType,
@@ -19,6 +20,7 @@ import {
 export class NutritionLogComponent implements OnInit {
   private nutritionService = inject(NutritionService);
   private router = inject(Router);
+  private confirmDialog = inject(ConfirmDialogService);
 
   Math = Math;
 
@@ -129,15 +131,14 @@ export class NutritionLogComponent implements OnInit {
     });
   }
 
-  editLog(log: NutritionLog): void {
-    // TODO: Implement edit functionality
-    alert('Edit functionality coming soon!');
-  }
-
-  deleteLog(logId: number): void {
-    if (!confirm('Are you sure you want to delete this food entry?')) {
-      return;
-    }
+  async deleteLog(logId: number): Promise<void> {
+    const confirmed = await this.confirmDialog.confirm({
+      title: 'Delete entry?',
+      message: 'Are you sure you want to delete this food entry?',
+      confirmText: 'Delete',
+      danger: true
+    });
+    if (!confirmed) return;
 
     this.nutritionService.deleteNutritionLog(logId).subscribe({
       next: () => {

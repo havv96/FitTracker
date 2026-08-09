@@ -1,0 +1,28 @@
+@if (active(); as dialog) {
+  <div
+    class="confirm-overlay"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="'confirm-title'"
+    (click)="cancel()"
+  >
+    <div class="confirm-dialog" (click)="$event.stopPropagation()">
+      <h2 id="confirm-title" class="confirm-title">{{ dialog.title }}</h2>
+      <p class="confirm-message">{{ dialog.message }}</p>
+      <div class="confirm-actions">
+        <button type="button" class="confirm-cancel" (click)="cancel()">
+          {{ dialog.cancelText || 'Cancel' }}
+        </button>
+        <button
+          type="button"
+          class="confirm-ok"
+          [class.danger]="dialog.danger"
+          (click)="confirm()"
+          autofocus
+        >
+          {{ dialog.confirmText || 'Confirm' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

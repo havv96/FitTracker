@@ -1,0 +1,20 @@
+<div class="toast-region" aria-atomic="true">
+  @for (toast of toasts(); track toast.id) {
+    <div
+      class="toast"
+      [class.info]="toast.kind === 'info'"
+      [class.success]="toast.kind === 'success'"
+      [class.error]="toast.kind === 'error'"
+      [attr.role]="toast.kind === 'error' ? 'alert' : 'status'"
+      [attr.aria-live]="toast.kind === 'error' ? 'assertive' : 'polite'"
+    >
+      <span class="toast-message">{{ toast.message }}</span>
+      <button
+        type="button"
+        class="toast-close"
+        (click)="dismiss(toast.id)"
+        aria-label="Dismiss notification"
+      >×</button>
+    </div>
+  }
+</div>
