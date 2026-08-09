@@ -34,9 +34,11 @@ export class TopbarComponent {
   readonly badge = computed(() => this.ctx().badge);
 
   private resolveContext(): TitleContext {
+    // During initial activation, a parent's ActivatedRoute may have a firstChild
+    // whose snapshot has not been advanced yet, so guard against undefined snapshot.
     let deepest = this.route;
-    while (deepest.firstChild) deepest = deepest.firstChild;
-    const data = deepest.snapshot.data as { titleKey?: string; badge?: string };
+    while (deepest.firstChild?.snapshot) deepest = deepest.firstChild;
+    const data = (deepest.snapshot?.data ?? {}) as { titleKey?: string; badge?: string };
     return { titleKey: data.titleKey, badge: data.badge };
   }
 }
