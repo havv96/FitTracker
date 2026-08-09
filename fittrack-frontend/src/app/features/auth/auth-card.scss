@@ -1,3 +1,6 @@
+// Shared auth-card layout used by both login and register components.
+// (Angular scopes these rules to whichever component's styleUrls list them.)
+
 .auth-viewport {
   min-height: 100vh;
   background: var(--bg);

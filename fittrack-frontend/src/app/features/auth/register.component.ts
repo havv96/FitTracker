@@ -11,7 +11,7 @@ import { FtIconComponent } from '../../shared/ui/ft-icon.component';
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink, FtButtonComponent, FtFormFieldComponent, FtIconComponent],
   templateUrl: './register.component.html',
-  styleUrls: ['./register.component.scss'],
+  styleUrls: ['./auth-card.scss'],
 })
 export class RegisterComponent {
   private fb = inject(FormBuilder);

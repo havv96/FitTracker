@@ -189,7 +189,7 @@
           @for (m of bodyMetrics(); track m.id) {
             <div class="metric-row">
               <div class="metric-date mono">{{ formatDate(m.date) }}</div>
-              <div class="metric-body">
+              <div>
                 <div class="metric-primary mono">{{ m.weightKg }} kg</div>
                 <div class="metric-detail mono">
                   @if (m.bodyFatPercentage) {
