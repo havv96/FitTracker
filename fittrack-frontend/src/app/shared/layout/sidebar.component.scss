@@ -176,6 +176,15 @@
 
 @media (max-width: 900px) {
   .sidebar {
-    display: none;
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 220ms ease, visibility 0s linear 220ms;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.24);
+    z-index: 30;
+  }
+  .sidebar.is-open {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform 220ms ease, visibility 0s linear 0s;
   }
 }
