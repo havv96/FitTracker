@@ -1,71 +1,90 @@
 .confirm-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1100;
+  z-index: 50;
+  padding: 24px;
   animation: overlay-in 120ms ease-out;
 }
 
 .confirm-dialog {
-  background: white;
-  border-radius: 8px;
-  padding: 1.5rem;
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px;
   min-width: 320px;
-  max-width: 480px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  max-width: 420px;
+  width: 100%;
   animation: dialog-in 180ms ease-out;
 }
 
 .confirm-title {
-  margin: 0 0 0.75rem;
-  font-size: 1.15rem;
-  color: #1f2937;
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -0.02em;
 }
 
 .confirm-message {
-  margin: 0 0 1.5rem;
-  color: #374151;
+  margin: 0 0 20px;
+  color: var(--muted);
   line-height: 1.5;
+  font-size: 14px;
 }
 
 .confirm-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .confirm-cancel,
 .confirm-ok {
-  padding: 0.5rem 1rem;
-  border: 0;
-  border-radius: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius);
   cursor: pointer;
-  font-weight: 500;
-}
-
-.confirm-cancel {
-  background: #f3f4f6;
-  color: #1f2937;
+  font-weight: 600;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+  font-family: inherit;
 
   &:hover,
-  &:focus-visible { background: #e5e7eb; outline: none; }
+  &:focus-visible {
+    border-color: var(--accent);
+    color: var(--accent);
+    outline: none;
+  }
 }
 
 .confirm-ok {
-  background: #3b82f6;
-  color: white;
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
 
   &:hover,
-  &:focus-visible { background: #2563eb; outline: none; }
+  &:focus-visible {
+    background: var(--accent-hi);
+    border-color: var(--accent-hi);
+    color: #fff;
+  }
 
   &.danger {
-    background: #ef4444;
+    background: var(--danger);
+    border-color: var(--danger);
 
     &:hover,
-    &:focus-visible { background: #dc2626; }
+    &:focus-visible {
+      background: var(--danger);
+      opacity: 0.9;
+    }
   }
 }
 

@@ -22,19 +22,16 @@ import { CommonModule } from '@angular/common';
 
     .spinner-container.fullscreen {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(255, 255, 255, 0.9);
-      z-index: 9999;
+      inset: 0;
+      background: color-mix(in oklch, var(--bg) 90%, transparent);
+      z-index: 60;
     }
 
     .spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #4CAF50;
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -45,9 +42,12 @@ import { CommonModule } from '@angular/common';
     }
 
     .spinner-message {
-      margin-top: 15px;
-      color: #666;
-      font-size: 14px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
   `]
 })

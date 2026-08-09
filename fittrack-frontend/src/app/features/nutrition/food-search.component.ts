@@ -1,23 +1,36 @@
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { FoodCategory, FoodItem, FoodItemsPage, MealType } from '../../core/models/nutrition.model';
 import { NutritionService } from '../../core/services/nutrition.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
-import {
-  FoodItem,
-  FoodCategory,
-  MealType,
-  FoodItemsPage
-} from '../../core/models/nutrition.model';
+import { FtButtonComponent } from '../../shared/ui/ft-button.component';
+import { FtCardComponent } from '../../shared/ui/ft-card.component';
+import { FtChipComponent } from '../../shared/ui/ft-chip.component';
+import { FtEmptyStateComponent } from '../../shared/ui/ft-empty-state.component';
+import { FtFormFieldComponent } from '../../shared/ui/ft-form-field.component';
+import { FtIconComponent } from '../../shared/ui/ft-icon.component';
+import { FtTagComponent } from '../../shared/ui/ft-tag.component';
 
 @Component({
   selector: 'app-food-search',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    FtButtonComponent,
+    FtCardComponent,
+    FtChipComponent,
+    FtEmptyStateComponent,
+    FtFormFieldComponent,
+    FtIconComponent,
+    FtTagComponent,
+  ],
   templateUrl: './food-search.component.html',
-  styleUrls: ['./food-search.component.scss']
+  styleUrls: ['./food-search.component.scss'],
 })
 export class FoodSearchComponent implements OnInit {
   private nutritionService = inject(NutritionService);
@@ -27,55 +40,52 @@ export class FoodSearchComponent implements OnInit {
   private toast = inject(ToastService);
   private destroyRef = inject(DestroyRef);
 
-  // State
-  foods = signal<FoodItem[]>([]);
-  selectedFood = signal<FoodItem | null>(null);
-  loading = signal<boolean>(false);
-  error = signal<string | null>(null);
-  showLogForm = signal<boolean>(false);
-  logging = signal<boolean>(false);
+  readonly foods = signal<FoodItem[]>([]);
+  readonly selectedFood = signal<FoodItem | null>(null);
+  readonly loading = signal<boolean>(false);
+  readonly error = signal<string | null>(null);
+  readonly showLogForm = signal<boolean>(false);
+  readonly logging = signal<boolean>(false);
 
-  // Search params
-  searchTerm: string = '';
-  selectedCategory: FoodCategory | null = null;
-  currentPage = signal<number>(0);
-  totalPages = signal<number>(1);
-  totalResults = signal<number>(0);
+  searchTerm = '';
+  readonly selectedCategory = signal<FoodCategory | null>(null);
+  readonly currentPage = signal<number>(0);
+  readonly totalPages = signal<number>(1);
+  readonly totalResults = signal<number>(0);
   pageSize = 20;
 
-  // Query params from route
   targetMealType?: MealType;
   targetDate?: string;
 
-  // Options
-  categories = Object.values(FoodCategory);
-  mealTypes = Object.values(MealType);
+  readonly categories = Object.values(FoodCategory);
+  readonly mealTypes = Object.values(MealType);
 
-  // Form
+  readonly mealLabels: Record<MealType, string> = {
+    [MealType.BREAKFAST]: $localize`:@@meal.breakfast:Breakfast`,
+    [MealType.LUNCH]: $localize`:@@meal.lunch:Lunch`,
+    [MealType.DINNER]: $localize`:@@meal.dinner:Dinner`,
+    [MealType.SNACK]: $localize`:@@meal.snack:Snack`,
+  };
+
+  readonly hasFilters = computed(() => !!(this.searchTerm || this.selectedCategory()));
+
   logForm: FormGroup;
 
-  // Debounce timer
   private searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     this.logForm = this.fb.group({
-      mealType: ['BREAKFAST', Validators.required],
-      servings: [1, [Validators.required, Validators.min(0.1)]]
+      mealType: [MealType.BREAKFAST, Validators.required],
+      servings: [1, [Validators.required, Validators.min(0.1)]],
     });
   }
 
   ngOnInit(): void {
-    this.route.queryParams
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(params => {
-        this.targetMealType = params['mealType'];
-        this.targetDate = params['date'];
-
-        if (this.targetMealType) {
-          this.logForm.patchValue({ mealType: this.targetMealType });
-        }
-      });
-
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      this.targetMealType = params['mealType'];
+      this.targetDate = params['date'];
+      if (this.targetMealType) this.logForm.patchValue({ mealType: this.targetMealType });
+    });
     this.searchFood();
   }
 
@@ -83,24 +93,26 @@ export class FoodSearchComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.nutritionService.searchFood({
-      searchTerm: this.searchTerm || undefined,
-      category: this.selectedCategory || undefined,
-      page: this.currentPage(),
-      size: this.pageSize
-    }).subscribe({
-      next: (response: FoodItemsPage) => {
-        this.foods.set(response.content);
-        this.totalPages.set(response.totalPages);
-        this.totalResults.set(response.totalElements);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.error.set('Failed to search food items');
-        this.loading.set(false);
-        console.error('Error searching food:', err);
-      }
-    });
+    this.nutritionService
+      .searchFood({
+        searchTerm: this.searchTerm || undefined,
+        category: this.selectedCategory() ?? undefined,
+        page: this.currentPage(),
+        size: this.pageSize,
+      })
+      .subscribe({
+        next: (response: FoodItemsPage) => {
+          this.foods.set(response.content);
+          this.totalPages.set(response.totalPages);
+          this.totalResults.set(response.totalElements);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          this.error.set($localize`:@@foodSearch.errorLoad:Could not search food items.`);
+          this.loading.set(false);
+          console.error('Error searching food:', err);
+        },
+      });
   }
 
   onSearchChange(): void {
@@ -111,20 +123,17 @@ export class FoodSearchComponent implements OnInit {
     }, 300);
   }
 
-  onFilterChange(): void {
+  toggleCategory(cat: FoodCategory | null): void {
+    this.selectedCategory.update((c) => (c === cat ? null : cat));
     this.currentPage.set(0);
     this.searchFood();
   }
 
   clearFilters(): void {
     this.searchTerm = '';
-    this.selectedCategory = null;
+    this.selectedCategory.set(null);
     this.currentPage.set(0);
     this.searchFood();
-  }
-
-  hasFilters(): boolean {
-    return !!(this.searchTerm || this.selectedCategory);
   }
 
   selectFood(food: FoodItem): void {
@@ -136,36 +145,35 @@ export class FoodSearchComponent implements OnInit {
     this.showLogForm.set(false);
     this.selectedFood.set(null);
     this.logForm.reset({
-      mealType: this.targetMealType || 'BREAKFAST',
-      servings: 1
+      mealType: this.targetMealType || MealType.BREAKFAST,
+      servings: 1,
     });
   }
 
   logFood(): void {
-    if (this.logForm.invalid || !this.selectedFood()) {
-      return;
-    }
-
+    if (this.logForm.invalid || !this.selectedFood()) return;
     this.logging.set(true);
     const food = this.selectedFood()!;
 
-    this.nutritionService.logFood({
-      foodItemId: food.id,
-      mealType: this.logForm.value.mealType,
-      servings: this.logForm.value.servings,
-      logDate: this.targetDate || new Date().toISOString().split('T')[0]
-    }).subscribe({
-      next: () => {
-        this.logging.set(false);
-        this.toast.success('Food logged successfully!');
-        this.goBack();
-      },
-      error: (err) => {
-        this.error.set('Failed to log food');
-        this.logging.set(false);
-        console.error('Error logging food:', err);
-      }
-    });
+    this.nutritionService
+      .logFood({
+        foodItemId: food.id,
+        mealType: this.logForm.value.mealType,
+        servings: this.logForm.value.servings,
+        logDate: this.targetDate || new Date().toISOString().split('T')[0],
+      })
+      .subscribe({
+        next: () => {
+          this.logging.set(false);
+          this.toast.success($localize`:@@foodSearch.loggedToast:Food logged.`);
+          this.goBack();
+        },
+        error: (err) => {
+          this.error.set($localize`:@@foodSearch.errorLog:Could not log food.`);
+          this.logging.set(false);
+          console.error('Error logging food:', err);
+        },
+      });
   }
 
   calculateTotalCalories(): number {
@@ -182,14 +190,14 @@ export class FoodSearchComponent implements OnInit {
 
   previousPage(): void {
     if (this.currentPage() > 0) {
-      this.currentPage.update(page => page - 1);
+      this.currentPage.update((p) => p - 1);
       this.searchFood();
     }
   }
 
   nextPage(): void {
     if (this.currentPage() < this.totalPages() - 1) {
-      this.currentPage.update(page => page + 1);
+      this.currentPage.update((p) => p + 1);
       this.searchFood();
     }
   }

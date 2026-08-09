@@ -1,66 +1,77 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { DailyNutritionSummary, MealType, NutritionLog } from '../../core/models/nutrition.model';
 import { NutritionService } from '../../core/services/nutrition.service';
 import { ConfirmDialogService } from '../../shared/components/confirm-dialog/confirm-dialog.service';
-import {
-  DailyNutritionSummary,
-  MealType,
-  NutritionLog
-} from '../../core/models/nutrition.model';
+import { FtButtonComponent } from '../../shared/ui/ft-button.component';
+import { FtCardComponent } from '../../shared/ui/ft-card.component';
+import { FtEmptyStateComponent } from '../../shared/ui/ft-empty-state.component';
+import { FtIconComponent } from '../../shared/ui/ft-icon.component';
+import { FtProgressBarComponent } from '../../shared/ui/ft-progress-bar.component';
+import { FtStatCardComponent } from '../../shared/ui/ft-stat-card.component';
 
 @Component({
   selector: 'app-nutrition-log',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    FtButtonComponent,
+    FtCardComponent,
+    FtEmptyStateComponent,
+    FtIconComponent,
+    FtProgressBarComponent,
+    FtStatCardComponent,
+  ],
   templateUrl: './nutrition-log.component.html',
-  styleUrls: ['./nutrition-log.component.scss']
+  styleUrls: ['./nutrition-log.component.scss'],
 })
 export class NutritionLogComponent implements OnInit {
   private nutritionService = inject(NutritionService);
   private router = inject(Router);
   private confirmDialog = inject(ConfirmDialogService);
 
-  Math = Math;
+  readonly summary = signal<DailyNutritionSummary | null>(null);
+  readonly loading = signal<boolean>(false);
+  readonly error = signal<string | null>(null);
+  selectedDate = '';
 
-  // State
-  summary = signal<DailyNutritionSummary | null>(null);
-  loading = signal<boolean>(false);
-  error = signal<string | null>(null);
-  selectedDate: string = '';
+  readonly mealTypes = Object.values(MealType);
+  readonly mealLabels: Record<MealType, string> = {
+    [MealType.BREAKFAST]: $localize`:@@meal.breakfast:Breakfast`,
+    [MealType.LUNCH]: $localize`:@@meal.lunch:Lunch`,
+    [MealType.DINNER]: $localize`:@@meal.dinner:Dinner`,
+    [MealType.SNACK]: $localize`:@@meal.snack:Snack`,
+  };
 
-  mealTypes = Object.values(MealType);
-
-  // Computed
-  calorieProgress = computed(() => {
+  readonly calorieProgress = computed(() => {
     const s = this.summary();
     if (!s) return 0;
-    return Math.min(Math.round((s.consumedCalories / s.targetCalories) * 100), 100);
+    return Math.min(Math.round((s.consumedCalories / (s.targetCalories || 1)) * 100), 100);
   });
 
-  remainingCalories = computed(() => {
+  readonly remainingCalories = computed(() => {
     const s = this.summary();
     if (!s) return 0;
-    return Math.round(s.remainingCalories);
+    return Math.max(0, Math.round(s.remainingCalories ?? s.targetCalories - s.consumedCalories));
   });
 
-  proteinProgress = computed(() => {
-    const s = this.summary();
-    if (!s) return 0;
-    return Math.min(Math.round((s.consumedProtein / s.targetProtein) * 100), 100);
-  });
+  readonly proteinProgress = computed(() =>
+    this.pct(this.summary()?.consumedProtein, this.summary()?.targetProtein),
+  );
+  readonly carbsProgress = computed(() =>
+    this.pct(this.summary()?.consumedCarbs, this.summary()?.targetCarbs),
+  );
+  readonly fatProgress = computed(() =>
+    this.pct(this.summary()?.consumedFat, this.summary()?.targetFat),
+  );
 
-  carbsProgress = computed(() => {
-    const s = this.summary();
-    if (!s) return 0;
-    return Math.min(Math.round((s.consumedCarbs / s.targetCarbs) * 100), 100);
-  });
-
-  fatProgress = computed(() => {
-    const s = this.summary();
-    if (!s) return 0;
-    return Math.min(Math.round((s.consumedFat / s.targetFat) * 100), 100);
+  readonly ringDashArray = 2 * Math.PI * 16;
+  readonly ringDashOffset = computed(() => {
+    const pct = this.calorieProgress() / 100;
+    return this.ringDashArray * (1 - pct);
   });
 
   ngOnInit(): void {
@@ -78,10 +89,10 @@ export class NutritionLogComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set('Failed to load nutrition data');
+        this.error.set($localize`:@@nutrition.errorLoad:Could not load nutrition data.`);
         this.loading.set(false);
         console.error('Error loading nutrition summary:', err);
-      }
+      },
     });
   }
 
@@ -104,14 +115,13 @@ export class NutritionLogComponent implements OnInit {
   }
 
   isToday(): boolean {
-    const today = new Date().toISOString().split('T')[0];
-    return this.selectedDate === today;
+    return this.selectedDate === new Date().toISOString().split('T')[0];
   }
 
   getMealLogs(mealType: MealType): NutritionLog[] {
     const s = this.summary();
     if (!s || !s.logs) return [];
-    return s.logs.filter(log => log.mealType === mealType);
+    return s.logs.filter((log) => log.mealType === mealType);
   }
 
   getMealTotal(mealType: MealType): number {
@@ -119,35 +129,31 @@ export class NutritionLogComponent implements OnInit {
   }
 
   openAddFood(mealType: MealType): void {
-    // Navigate to food search with meal type
     this.router.navigate(['/nutrition/search'], {
-      queryParams: { mealType, date: this.selectedDate }
-    });
-  }
-
-  openFoodSearch(): void {
-    this.router.navigate(['/nutrition/search'], {
-      queryParams: { date: this.selectedDate }
+      queryParams: { mealType, date: this.selectedDate },
     });
   }
 
   async deleteLog(logId: number): Promise<void> {
     const confirmed = await this.confirmDialog.confirm({
-      title: 'Delete entry?',
-      message: 'Are you sure you want to delete this food entry?',
-      confirmText: 'Delete',
-      danger: true
+      title: $localize`:@@nutrition.deleteTitle:Delete entry?`,
+      message: $localize`:@@nutrition.deleteMessage:This will remove the food from today's log.`,
+      confirmText: $localize`:@@common.delete:Delete`,
+      danger: true,
     });
     if (!confirmed) return;
 
     this.nutritionService.deleteNutritionLog(logId).subscribe({
-      next: () => {
-        this.loadDailySummary();
-      },
+      next: () => this.loadDailySummary(),
       error: (err) => {
-        this.error.set('Failed to delete entry');
+        this.error.set($localize`:@@nutrition.errorDelete:Could not delete entry.`);
         console.error('Error deleting log:', err);
-      }
+      },
     });
+  }
+
+  private pct(value: number | undefined | null, target: number | undefined | null): number {
+    if (!value || !target) return 0;
+    return Math.min(Math.round((value / target) * 100), 100);
   }
 }

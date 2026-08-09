@@ -1,0 +1,86 @@
+<aside class="sidebar" aria-label="Primary">
+  <div class="sidebar-logo">
+    <div class="logo-mark" aria-hidden="true">
+      <ft-icon name="logo" />
+    </div>
+    <div class="brand">
+      <div class="brand-name">FitTrack Pro</div>
+      <div class="brand-sub" i18n="@@sidebar.brandSub">Training Console</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav" aria-label="Main navigation">
+    <div class="nav-section" i18n="@@sidebar.sectionMain">Main</div>
+    <a class="nav-item" routerLink="/dashboard" routerLinkActive="active">
+      <ft-icon name="grid" />
+      <span i18n="@@nav.dashboard">Dashboard</span>
+    </a>
+    <a class="nav-item" routerLink="/workout/session" routerLinkActive="active">
+      <ft-icon name="dumbbell" />
+      <span i18n="@@nav.workout">Workout</span>
+    </a>
+    <a class="nav-item" routerLink="/nutrition" routerLinkActive="active">
+      <ft-icon name="fork" />
+      <span i18n="@@nav.nutrition">Nutrition</span>
+    </a>
+
+    <div class="nav-section" i18n="@@sidebar.sectionTools">Tools</div>
+    <a class="nav-item" routerLink="/workout/exercises" routerLinkActive="active">
+      <ft-icon name="list" />
+      <span i18n="@@nav.library">Exercise Library</span>
+    </a>
+    <a class="nav-item" routerLink="/workout/history" routerLinkActive="active">
+      <ft-icon name="history" />
+      <span i18n="@@nav.history">History</span>
+    </a>
+    <a class="nav-item" routerLink="/analytics" routerLinkActive="active">
+      <ft-icon name="chart" />
+      <span i18n="@@nav.progress">Progress</span>
+    </a>
+
+    <div class="nav-section" i18n="@@sidebar.sectionAccount">Account</div>
+    <a class="nav-item" routerLink="/profile" routerLinkActive="active">
+      <ft-icon name="user" />
+      <span i18n="@@nav.profile">Profile</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="avatar" aria-hidden="true">
+      {{ emailInitials((currentUser$ | async)?.email) }}
+    </div>
+    <div class="user-block">
+      <div class="user-name">
+        {{ (currentUser$ | async)?.email || ('Guest' | uppercase) }}
+      </div>
+      <button
+        type="button"
+        class="user-role logout"
+        (click)="logout()"
+        i18n-aria-label="@@sidebar.logoutAria"
+        aria-label="Log out"
+        i18n="@@sidebar.logout"
+      >
+        Sign out
+      </button>
+    </div>
+    <button
+      type="button"
+      class="chip-btn locale-btn"
+      (click)="locale.toggle()"
+      i18n-aria-label="@@sidebar.localeAria"
+      aria-label="Switch language"
+    >
+      {{ locale.locale() === 'en' ? 'EN' : 'BG' }}
+    </button>
+    <button
+      type="button"
+      class="theme-btn"
+      (click)="theme.toggle()"
+      i18n-aria-label="@@sidebar.themeAria"
+      aria-label="Toggle theme"
+    >
+      <ft-icon [name]="theme.theme() === 'dark' ? 'sun' : 'moon'" [size]="15" />
+    </button>
+  </div>
+</aside>

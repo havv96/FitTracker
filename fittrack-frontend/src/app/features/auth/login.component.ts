@@ -1,15 +1,17 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { FtButtonComponent } from '../../shared/ui/ft-button.component';
+import { FtFormFieldComponent } from '../../shared/ui/ft-form-field.component';
+import { FtIconComponent } from '../../shared/ui/ft-icon.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, FtButtonComponent, FtFormFieldComponent, FtIconComponent],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss']
+  styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent {
   private fb = inject(FormBuilder);
@@ -20,15 +22,29 @@ export class LoginComponent {
   loading = false;
   errorMessage = '';
 
+  readonly emailErrorText = $localize`:@@auth.login.emailInvalid:Enter a valid email address.`;
+  readonly passwordErrorText = $localize`:@@auth.login.passwordRequired:Password is required.`;
+
   constructor() {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+      password: ['', Validators.required],
     });
+  }
+
+  showEmailError(): boolean {
+    const c = this.loginForm.get('email');
+    return !!(c && c.invalid && c.touched);
+  }
+
+  showPasswordError(): boolean {
+    const c = this.loginForm.get('password');
+    return !!(c && c.invalid && c.touched);
   }
 
   onSubmit(): void {
     if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
       return;
     }
 
@@ -42,9 +58,11 @@ export class LoginComponent {
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.message || 'Login failed. Please check your credentials.';
+        this.errorMessage =
+          err.error?.message ||
+          $localize`:@@auth.login.errorFallback:Login failed. Please check your credentials.`;
         console.error('Login error:', err);
-      }
+      },
     });
   }
 }

@@ -1,66 +1,75 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { WorkoutDetailResponse, WorkoutHistoryResponse } from '../../core/models/workout.model';
 import { WorkoutService } from '../../core/services/workout.service';
-import { WorkoutHistoryResponse, WorkoutDetailResponse } from '../../core/models/workout.model';
+import { FtButtonComponent } from '../../shared/ui/ft-button.component';
+import { FtCardComponent } from '../../shared/ui/ft-card.component';
+import { FtChipComponent } from '../../shared/ui/ft-chip.component';
+import { FtEmptyStateComponent } from '../../shared/ui/ft-empty-state.component';
+import { FtFormFieldComponent } from '../../shared/ui/ft-form-field.component';
+import { FtIconComponent } from '../../shared/ui/ft-icon.component';
+import { FtStatCardComponent } from '../../shared/ui/ft-stat-card.component';
+import { FtTagComponent } from '../../shared/ui/ft-tag.component';
+
+type QuickFilter = 'week' | 'month' | '3months' | 'year' | '';
 
 @Component({
   selector: 'app-workout-history',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    FtButtonComponent,
+    FtCardComponent,
+    FtChipComponent,
+    FtEmptyStateComponent,
+    FtFormFieldComponent,
+    FtIconComponent,
+    FtStatCardComponent,
+    FtTagComponent,
+  ],
   templateUrl: './workout-history.component.html',
-  styleUrls: ['./workout-history.component.scss']
+  styleUrls: ['./workout-history.component.scss'],
 })
 export class WorkoutHistoryComponent implements OnInit {
   private workoutService = inject(WorkoutService);
 
-  // State
   workouts = signal<WorkoutHistoryResponse[]>([]);
   selectedWorkoutDetail = signal<WorkoutDetailResponse | null>(null);
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
 
-  // Date range
-  startDate: string = '';
-  endDate: string = '';
-  selectedFilter = signal<string>('week');
+  startDate = '';
+  endDate = '';
+  selectedFilter = signal<QuickFilter>('week');
 
-  // Quick filter options
-  quickFilters = [
-    { label: 'This Week', value: 'week' },
-    { label: 'This Month', value: 'month' },
-    { label: 'Last 3 Months', value: '3months' },
-    { label: 'This Year', value: 'year' }
+  readonly quickFilters: { label: string; value: Exclude<QuickFilter, ''> }[] = [
+    { label: $localize`:@@history.filter.week:This week`, value: 'week' },
+    { label: $localize`:@@history.filter.month:This month`, value: 'month' },
+    { label: $localize`:@@history.filter.3months:Last 3 months`, value: '3months' },
+    { label: $localize`:@@history.filter.year:This year`, value: 'year' },
   ];
 
-  // Computed stats
-  totalWorkouts = computed(() => this.workouts().length);
-
-  totalVolume = computed(() => {
-    return Math.round(
-      this.workouts().reduce((sum, w) => sum + w.totalVolume, 0)
-    );
-  });
-
-  totalSets = computed(() => {
-    return this.workouts().reduce((sum, w) => sum + w.totalSets, 0);
-  });
-
-  averageDuration = computed(() => {
-    const workouts = this.workouts();
-    if (workouts.length === 0) return 0;
-    const total = workouts.reduce((sum, w) => sum + w.durationMinutes, 0);
-    return Math.round(total / workouts.length);
+  readonly totalWorkouts = computed(() => this.workouts().length);
+  readonly totalVolume = computed(() =>
+    Math.round(this.workouts().reduce((sum, w) => sum + (w.totalVolume ?? 0), 0)),
+  );
+  readonly totalSets = computed(() => this.workouts().reduce((sum, w) => sum + (w.totalSets ?? 0), 0));
+  readonly averageDuration = computed(() => {
+    const list = this.workouts();
+    if (!list.length) return 0;
+    return Math.round(list.reduce((sum, w) => sum + (w.durationMinutes ?? 0), 0) / list.length);
   });
 
   ngOnInit(): void {
     this.selectQuickFilter('week');
   }
 
-  selectQuickFilter(filter: string): void {
+  selectQuickFilter(filter: Exclude<QuickFilter, ''>): void {
     this.selectedFilter.set(filter);
     const now = new Date();
-    let start = new Date();
+    const start = new Date();
 
     switch (filter) {
       case 'week':
@@ -84,13 +93,11 @@ export class WorkoutHistoryComponent implements OnInit {
 
   onDateChange(): void {
     this.selectedFilter.set('');
+    this.loadHistory();
   }
 
   loadHistory(): void {
-    if (!this.startDate || !this.endDate) {
-      return;
-    }
-
+    if (!this.startDate || !this.endDate) return;
     this.loading.set(true);
     this.error.set(null);
 
@@ -100,22 +107,20 @@ export class WorkoutHistoryComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set('Failed to load workout history. Please try again.');
+        this.error.set($localize`:@@history.errorLoad:Could not load workout history.`);
         this.loading.set(false);
         console.error('Error loading history:', err);
-      }
+      },
     });
   }
 
   viewWorkoutDetail(workoutId: number): void {
     this.workoutService.getWorkoutDetail(workoutId).subscribe({
-      next: (detail) => {
-        this.selectedWorkoutDetail.set(detail);
-      },
+      next: (detail) => this.selectedWorkoutDetail.set(detail),
       error: (err) => {
-        this.error.set('Failed to load workout details.');
+        this.error.set($localize`:@@history.errorDetail:Could not load workout details.`);
         console.error('Error loading workout detail:', err);
-      }
+      },
     });
   }
 
@@ -123,21 +128,20 @@ export class WorkoutHistoryComponent implements OnInit {
     this.selectedWorkoutDetail.set(null);
   }
 
-  formatDate(dateString: string): string {
+  formatDate(dateString: string | undefined | null): string {
+    if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
+    return date.toLocaleDateString(undefined, {
+      weekday: 'short',
       year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+      month: 'short',
+      day: 'numeric',
     });
   }
 
-  formatTime(timeString: string): string {
+  formatTime(timeString: string | undefined | null): string {
+    if (!timeString) return '—';
     const date = new Date(timeString);
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
   }
 }

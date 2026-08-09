@@ -1,16 +1,32 @@
-import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { ProfileService } from '../../core/services/profile.service';
+import { Component, OnInit, inject } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProfileRequest, ProfileResponse } from '../../core/models/profile.model';
+import { ProfileService } from '../../core/services/profile.service';
+import { FtButtonComponent } from '../../shared/ui/ft-button.component';
+import { FtCardComponent } from '../../shared/ui/ft-card.component';
+import { FtEmptyStateComponent } from '../../shared/ui/ft-empty-state.component';
+import { FtFormFieldComponent } from '../../shared/ui/ft-form-field.component';
+import { FtIconComponent } from '../../shared/ui/ft-icon.component';
+import { FtStatCardComponent } from '../../shared/ui/ft-stat-card.component';
+import { FtTagComponent } from '../../shared/ui/ft-tag.component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FtButtonComponent,
+    FtCardComponent,
+    FtEmptyStateComponent,
+    FtFormFieldComponent,
+    FtIconComponent,
+    FtStatCardComponent,
+    FtTagComponent,
+  ],
   templateUrl: './profile.component.html',
-  styleUrls: ['./profile.component.scss']
+  styleUrls: ['./profile.component.scss'],
 })
 export class ProfileComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -23,27 +39,46 @@ export class ProfileComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  // Dropdown options
-  genderOptions = [
-    { value: 'MALE', label: 'Male' },
-    { value: 'FEMALE', label: 'Female' }
+  readonly genderOptions = [
+    { value: 'MALE', label: $localize`:@@profile.gender.male:Male` },
+    { value: 'FEMALE', label: $localize`:@@profile.gender.female:Female` },
   ];
 
-  activityLevelOptions = [
-    { value: 'SEDENTARY', label: 'Sedentary (little or no exercise)', description: 'Desk job, minimal activity' },
-    { value: 'LIGHTLY_ACTIVE', label: 'Lightly Active', description: 'Light exercise 1-3 days/week' },
-    { value: 'MODERATELY_ACTIVE', label: 'Moderately Active', description: 'Moderate exercise 3-5 days/week' },
-    { value: 'VERY_ACTIVE', label: 'Very Active', description: 'Hard exercise 6-7 days/week' },
-    { value: 'EXTRA_ACTIVE', label: 'Extra Active', description: 'Very hard exercise & physical job' }
+  readonly activityLevelOptions = [
+    {
+      value: 'SEDENTARY',
+      label: $localize`:@@profile.activity.sedentary:Sedentary`,
+      description: $localize`:@@profile.activity.sedentaryDesc:Little or no exercise.`,
+    },
+    {
+      value: 'LIGHTLY_ACTIVE',
+      label: $localize`:@@profile.activity.light:Lightly active`,
+      description: $localize`:@@profile.activity.lightDesc:Light exercise 1–3 days/week.`,
+    },
+    {
+      value: 'MODERATELY_ACTIVE',
+      label: $localize`:@@profile.activity.moderate:Moderately active`,
+      description: $localize`:@@profile.activity.moderateDesc:Moderate exercise 3–5 days/week.`,
+    },
+    {
+      value: 'VERY_ACTIVE',
+      label: $localize`:@@profile.activity.very:Very active`,
+      description: $localize`:@@profile.activity.veryDesc:Hard exercise 6–7 days/week.`,
+    },
+    {
+      value: 'EXTRA_ACTIVE',
+      label: $localize`:@@profile.activity.extra:Extra active`,
+      description: $localize`:@@profile.activity.extraDesc:Very hard exercise & physical job.`,
+    },
   ];
 
-  weightGoalOptions = [
-    { value: 'LOSE_FAST', label: 'Lose Weight Fast', description: '-0.75 kg/week' },
-    { value: 'LOSE_MODERATE', label: 'Lose Weight Moderately', description: '-0.5 kg/week' },
-    { value: 'LOSE_SLOW', label: 'Lose Weight Slowly', description: '-0.25 kg/week' },
-    { value: 'MAINTAIN', label: 'Maintain Weight', description: 'Stay at current weight' },
-    { value: 'GAIN_SLOW', label: 'Gain Weight Slowly', description: '+0.25 kg/week' },
-    { value: 'GAIN_MODERATE', label: 'Gain Weight Moderately', description: '+0.5 kg/week' }
+  readonly weightGoalOptions = [
+    { value: 'LOSE_FAST', label: $localize`:@@profile.goal.loseFast:Lose fast`, description: '-0.75 kg/wk' },
+    { value: 'LOSE_MODERATE', label: $localize`:@@profile.goal.loseMod:Lose moderate`, description: '-0.5 kg/wk' },
+    { value: 'LOSE_SLOW', label: $localize`:@@profile.goal.loseSlow:Lose slow`, description: '-0.25 kg/wk' },
+    { value: 'MAINTAIN', label: $localize`:@@profile.goal.maintain:Maintain`, description: '±0 kg/wk' },
+    { value: 'GAIN_SLOW', label: $localize`:@@profile.goal.gainSlow:Gain slow`, description: '+0.25 kg/wk' },
+    { value: 'GAIN_MODERATE', label: $localize`:@@profile.goal.gainMod:Gain moderate`, description: '+0.5 kg/wk' },
   ];
 
   ngOnInit(): void {
@@ -59,7 +94,7 @@ export class ProfileComponent implements OnInit {
       activityLevel: ['', Validators.required],
       weightGoal: ['', Validators.required],
       targetWeightKg: [null, [Validators.required, Validators.min(30), Validators.max(300)]],
-      currentWeightKg: [null, [Validators.required, Validators.min(30), Validators.max(300)]]
+      currentWeightKg: [null, [Validators.required, Validators.min(30), Validators.max(300)]],
     });
   }
 
@@ -75,14 +110,13 @@ export class ProfileComponent implements OnInit {
         this.isEditMode = false;
       },
       error: (error) => {
-        // Profile doesn't exist yet, enable edit mode to create one
         if (error.status === 404) {
           this.isEditMode = true;
         } else {
-          this.errorMessage = 'Failed to load profile. Please try again.';
+          this.errorMessage = $localize`:@@profile.errorLoad:Could not load your profile.`;
         }
         this.isLoading = false;
-      }
+      },
     });
   }
 
@@ -94,7 +128,7 @@ export class ProfileComponent implements OnInit {
       activityLevel: profile.activityLevel,
       weightGoal: profile.weightGoal,
       targetWeightKg: profile.targetWeightKg,
-      currentWeightKg: 70 // Default value, should be from daily stats
+      currentWeightKg: 70,
     });
   }
 
@@ -102,9 +136,7 @@ export class ProfileComponent implements OnInit {
     this.isEditMode = !this.isEditMode;
     this.errorMessage = '';
     this.successMessage = '';
-
     if (!this.isEditMode && this.profile) {
-      // Cancel editing - restore original values
       this.populateForm(this.profile);
     }
   }
@@ -112,7 +144,7 @@ export class ProfileComponent implements OnInit {
   saveProfile(): void {
     if (this.profileForm.invalid) {
       this.markFormGroupTouched(this.profileForm);
-      this.errorMessage = 'Please fill in all required fields correctly.';
+      this.errorMessage = $localize`:@@profile.errorRequired:Please fill in every field.`;
       return;
     }
 
@@ -125,53 +157,44 @@ export class ProfileComponent implements OnInit {
     this.profileService.createOrUpdateProfile(request).subscribe({
       next: (response) => {
         this.profile = response;
-        this.successMessage = 'Profile saved successfully!';
+        this.successMessage = $localize`:@@profile.saved:Profile saved.`;
         this.isEditMode = false;
         this.isLoading = false;
 
-        // Clear success message after 3 seconds
-        setTimeout(() => {
-          this.successMessage = '';
-        }, 3000);
+        setTimeout(() => (this.successMessage = ''), 3000);
       },
       error: (error) => {
-        this.errorMessage = error.error?.message || 'Failed to save profile. Please try again.';
+        this.errorMessage =
+          error.error?.message ||
+          $localize`:@@profile.errorSave:Could not save your profile. Please try again.`;
         this.isLoading = false;
-      }
+      },
     });
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach(key => {
-      const control = formGroup.get(key);
-      control?.markAsTouched();
-    });
+    Object.keys(formGroup.controls).forEach((key) => formGroup.get(key)?.markAsTouched());
   }
 
-  getFieldError(fieldName: string): string {
-    const control = this.profileForm.get(fieldName);
-    if (control?.touched && control?.errors) {
-      if (control.errors['required']) return 'This field is required';
-      if (control.errors['min']) return `Minimum value is ${control.errors['min'].min}`;
-      if (control.errors['max']) return `Maximum value is ${control.errors['max'].max}`;
-    }
-    return '';
+  fieldTouched(name: string): boolean {
+    const c = this.profileForm.get(name);
+    return !!(c && c.invalid && c.touched);
   }
 
-  // Utility methods for template
   getActivityLevelLabel(value: string): string {
-    return this.activityLevelOptions.find(opt => opt.value === value)?.label || value;
+    return this.activityLevelOptions.find((o) => o.value === value)?.label || value;
   }
 
   getWeightGoalLabel(value: string): string {
-    return this.weightGoalOptions.find(opt => opt.value === value)?.label || value;
+    return this.weightGoalOptions.find((o) => o.value === value)?.label || value;
   }
 
   getGenderLabel(value: string): string {
-    return this.genderOptions.find(opt => opt.value === value)?.label || value;
+    return this.genderOptions.find((o) => o.value === value)?.label || value;
   }
 
-  calculateAge(dateOfBirth: string): number {
+  calculateAge(dateOfBirth: string | undefined | null): number {
+    if (!dateOfBirth) return 0;
     const today = new Date();
     const birthDate = new Date(dateOfBirth);
     let age = today.getFullYear() - birthDate.getFullYear();

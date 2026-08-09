@@ -1,294 +1,229 @@
-<div class="profile-container">
-  <!-- Header -->
-  <div class="profile-header">
-    <h2>Profile Management</h2>
-    <a routerLink="/dashboard" class="btn-back">← Back to Dashboard</a>
-  </div>
+<div class="profile">
+  @if (isLoading && !profile) {
+    <ft-card>
+      <div class="loading mono" i18n="@@common.loading">Loading…</div>
+    </ft-card>
+  }
 
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="loading">
-    <div class="spinner"></div>
-    <p>Loading...</p>
-  </div>
+  @if (errorMessage) {
+    <div class="banner banner-error">{{ errorMessage }}</div>
+  }
+  @if (successMessage) {
+    <div class="banner banner-success">{{ successMessage }}</div>
+  }
 
-  <!-- Error Message -->
-  <div *ngIf="errorMessage" class="alert alert-error">
-    {{ errorMessage }}
-  </div>
-
-  <!-- Success Message -->
-  <div *ngIf="successMessage" class="alert alert-success">
-    {{ successMessage }}
-  </div>
-
-  <!-- Profile Content -->
-  <div *ngIf="!isLoading" class="profile-content">
-
-    <!-- View Mode -->
-    <div *ngIf="!isEditMode && profile" class="view-mode">
-
-      <!-- Personal Information Card -->
-      <div class="card">
-        <div class="card-header">
-          <h3>Personal Information</h3>
-          <button class="btn-edit" (click)="toggleEditMode()">Edit Profile</button>
+  @if (!isLoading || profile) {
+    @if (!isEditMode && profile; as p) {
+      <div class="profile-hero">
+        <div class="hero-avatar" aria-hidden="true">
+          {{ getGenderLabel(p.gender).charAt(0) }}
         </div>
-        <div class="card-body">
-          <div class="info-grid">
-            <div class="info-item">
-              <label>Age</label>
-              <div class="value">{{ calculateAge(profile.dateOfBirth) }} years</div>
-            </div>
-            <div class="info-item">
-              <label>Gender</label>
-              <div class="value">{{ getGenderLabel(profile.gender) }}</div>
-            </div>
-            <div class="info-item">
-              <label>Height</label>
-              <div class="value">{{ profile.heightCm }} cm</div>
-            </div>
-            <div class="info-item">
-              <label>Date of Birth</label>
-              <div class="value">{{ profile.dateOfBirth | date:'mediumDate' }}</div>
-            </div>
+        <div class="hero-body">
+          <div class="hero-eyebrow" i18n="@@profile.hero.eyebrow">Athlete profile</div>
+          <div class="hero-title">{{ getWeightGoalLabel(p.weightGoal) }}</div>
+          <div class="hero-sub mono">
+            {{ getActivityLevelLabel(p.activityLevel) }} · {{ calculateAge(p.dateOfBirth) }}
+            <ng-container i18n="@@profile.years">y</ng-container>
           </div>
         </div>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-value mono">{{ p.heightCm }}</div>
+            <div class="hero-stat-label" i18n="@@profile.height">cm</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-value mono">{{ p.targetWeightKg }}</div>
+            <div class="hero-stat-label" i18n="@@profile.targetKg">kg goal</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-value mono">{{ calculateAge(p.dateOfBirth) }}</div>
+            <div class="hero-stat-label" i18n="@@profile.age">age</div>
+          </div>
+        </div>
+        <button ft-button variant="primary" (click)="toggleEditMode()">
+          <ft-icon name="edit" [size]="14" />
+          <span i18n="@@profile.edit">Edit</span>
+        </button>
       </div>
 
-      <!-- Goals & Activity Card -->
-      <div class="card">
-        <div class="card-header">
-          <h3>Goals & Activity</h3>
-        </div>
-        <div class="card-body">
-          <div class="info-grid">
-            <div class="info-item">
-              <label>Activity Level</label>
-              <div class="value">{{ getActivityLevelLabel(profile.activityLevel) }}</div>
+      <div class="grid-2">
+        <ft-card title="Physical data" i18n-title="@@profile.physical">
+          <div class="kv-list">
+            <div class="kv">
+              <div class="kv-label" i18n="@@profile.dob">Date of birth</div>
+              <div class="kv-value mono">{{ p.dateOfBirth }}</div>
             </div>
-            <div class="info-item">
-              <label>Weight Goal</label>
-              <div class="value">{{ getWeightGoalLabel(profile.weightGoal) }}</div>
+            <div class="kv">
+              <div class="kv-label" i18n="@@profile.gender">Gender</div>
+              <div class="kv-value">{{ getGenderLabel(p.gender) }}</div>
             </div>
-            <div class="info-item">
-              <label>Target Weight</label>
-              <div class="value">{{ profile.targetWeightKg }} kg</div>
+            <div class="kv">
+              <div class="kv-label" i18n="@@profile.activityLevel">Activity level</div>
+              <div class="kv-value">{{ getActivityLevelLabel(p.activityLevel) }}</div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Calculated Metrics Card -->
-      <div class="card metrics-card">
-        <div class="card-header">
-          <h3>Your Calculated Metrics</h3>
-        </div>
-        <div class="card-body">
-          <div class="metrics-grid">
-            <div class="metric-box">
-              <div class="metric-label">BMR</div>
-              <div class="metric-value">{{ profile.calculations.bmr }}</div>
-              <div class="metric-unit">calories/day</div>
-              <div class="metric-description">Basal Metabolic Rate</div>
-            </div>
-            <div class="metric-box">
-              <div class="metric-label">TDEE</div>
-              <div class="metric-value">{{ profile.calculations.tdee }}</div>
-              <div class="metric-unit">calories/day</div>
-              <div class="metric-description">Total Daily Energy Expenditure</div>
-            </div>
-            <div class="metric-box primary">
-              <div class="metric-label">Daily Target</div>
-              <div class="metric-value">{{ profile.calculations.recommendedCalories }}</div>
-              <div class="metric-unit">calories/day</div>
-              <div class="metric-description">Recommended for your goal</div>
-            </div>
-          </div>
-
-          <!-- Macro Targets -->
-          <div class="macro-targets">
-            <h4>Daily Macro Targets</h4>
-            <div class="macro-grid">
-              <div class="macro-item protein">
-                <div class="macro-name">Protein</div>
-                <div class="macro-amount">{{ profile.calculations.macroTargets.protein }}g</div>
-              </div>
-              <div class="macro-item carbs">
-                <div class="macro-name">Carbs</div>
-                <div class="macro-amount">{{ profile.calculations.macroTargets.carbs }}g</div>
-              </div>
-              <div class="macro-item fat">
-                <div class="macro-name">Fat</div>
-                <div class="macro-amount">{{ profile.calculations.macroTargets.fat }}g</div>
+            <div class="kv">
+              <div class="kv-label" i18n="@@profile.goal">Weight goal</div>
+              <div class="kv-value">
+                <ft-tag>{{ getWeightGoalLabel(p.weightGoal) }}</ft-tag>
               </div>
             </div>
           </div>
-        </div>
+        </ft-card>
+
+        @if (p.calculations; as c) {
+          <div class="bmr-card">
+            <div class="bmr-eyebrow" i18n="@@profile.bmr.eyebrow">Calorie & macro plan</div>
+            <div class="bmr-rows">
+              <div class="bmr-row">
+                <div class="bmr-label" i18n="@@profile.bmr">BMR</div>
+                <div class="bmr-value mono">{{ c.bmr | number: '1.0-0' }} <span class="bmr-unit">kcal</span></div>
+              </div>
+              <div class="bmr-row">
+                <div class="bmr-label" i18n="@@profile.tdee">TDEE</div>
+                <div class="bmr-value mono">{{ c.tdee | number: '1.0-0' }} <span class="bmr-unit">kcal</span></div>
+              </div>
+              <div class="bmr-row">
+                <div class="bmr-label" i18n="@@profile.recommended">Recommended</div>
+                <div class="bmr-value mono">{{ c.recommendedCalories | number: '1.0-0' }} <span class="bmr-unit">kcal</span></div>
+              </div>
+            </div>
+            <div class="bmr-macros">
+              <ft-stat-card
+                i18n-label="@@macro.protein"
+                label="Protein"
+                [value]="c.macroTargets.protein | number: '1.0-0'"
+                unit="g"
+              />
+              <ft-stat-card
+                i18n-label="@@macro.carbs"
+                label="Carbs"
+                [value]="c.macroTargets.carbs | number: '1.0-0'"
+                unit="g"
+              />
+              <ft-stat-card
+                i18n-label="@@macro.fat"
+                label="Fat"
+                [value]="c.macroTargets.fat | number: '1.0-0'"
+                unit="g"
+              />
+            </div>
+            <div class="bmr-footnote mono" i18n="@@profile.bmr.formula">
+              Formula: Mifflin-St Jeor
+            </div>
+          </div>
+        }
       </div>
-    </div>
+    } @else if (isEditMode) {
+      <ft-card [padded]="false">
+        <header class="edit-header">
+          <div class="edit-title" i18n="@@profile.edit.title">Edit profile</div>
+          @if (profile) {
+            <button ft-button size="sm" (click)="toggleEditMode()" i18n="@@common.cancel">Cancel</button>
+          }
+        </header>
+        <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="edit-form">
+          <div class="grid-2">
+            <ft-form-field
+              for="pf-height"
+              label="Height (cm)"
+              i18n-label="@@profile.heightLabel"
+              [error]="fieldTouched('heightCm') ? ('Height is required.' | uppercase) : null"
+            >
+              <input id="pf-height" type="number" formControlName="heightCm" min="100" max="250" />
+            </ft-form-field>
+            <ft-form-field
+              for="pf-dob"
+              label="Date of birth"
+              i18n-label="@@profile.dobLabel"
+              [error]="fieldTouched('dateOfBirth') ? ('Required.' | uppercase) : null"
+            >
+              <input id="pf-dob" type="date" formControlName="dateOfBirth" />
+            </ft-form-field>
+            <ft-form-field
+              for="pf-gender"
+              label="Gender"
+              i18n-label="@@profile.genderLabel"
+            >
+              <select id="pf-gender" formControlName="gender">
+                <option value="" i18n="@@profile.selectPlaceholder">Choose…</option>
+                @for (o of genderOptions; track o.value) {
+                  <option [value]="o.value">{{ o.label }}</option>
+                }
+              </select>
+            </ft-form-field>
+            <ft-form-field
+              for="pf-cur-w"
+              label="Current weight (kg)"
+              i18n-label="@@profile.currentWeightLabel"
+              [error]="fieldTouched('currentWeightKg') ? ('Required.' | uppercase) : null"
+            >
+              <input id="pf-cur-w" type="number" formControlName="currentWeightKg" min="30" max="300" step="0.1" />
+            </ft-form-field>
+            <ft-form-field
+              for="pf-target-w"
+              label="Target weight (kg)"
+              i18n-label="@@profile.targetWeightLabel"
+              [error]="fieldTouched('targetWeightKg') ? ('Required.' | uppercase) : null"
+            >
+              <input id="pf-target-w" type="number" formControlName="targetWeightKg" min="30" max="300" step="0.1" />
+            </ft-form-field>
+            <ft-form-field
+              for="pf-activity"
+              label="Activity level"
+              i18n-label="@@profile.activityLabel"
+            >
+              <select id="pf-activity" formControlName="activityLevel">
+                <option value="" i18n="@@profile.selectPlaceholder">Choose…</option>
+                @for (o of activityLevelOptions; track o.value) {
+                  <option [value]="o.value">{{ o.label }}</option>
+                }
+              </select>
+            </ft-form-field>
+            <ft-form-field
+              for="pf-goal"
+              label="Weight goal"
+              i18n-label="@@profile.goalLabel"
+            >
+              <select id="pf-goal" formControlName="weightGoal">
+                <option value="" i18n="@@profile.selectPlaceholder">Choose…</option>
+                @for (o of weightGoalOptions; track o.value) {
+                  <option [value]="o.value">{{ o.label }}</option>
+                }
+              </select>
+            </ft-form-field>
+          </div>
 
-    <!-- Edit Mode -->
-    <div *ngIf="isEditMode" class="edit-mode">
-      <div class="card">
-        <div class="card-header">
-          <h3>{{ profile ? 'Edit Profile' : 'Create Profile' }}</h3>
-        </div>
-        <div class="card-body">
-          <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
-
-            <!-- Personal Information Section -->
-            <div class="form-section">
-              <h4>Personal Information</h4>
-
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="heightCm">Height (cm) *</label>
-                  <input
-                    type="number"
-                    id="heightCm"
-                    formControlName="heightCm"
-                    placeholder="e.g., 175"
-                    [class.invalid]="getFieldError('heightCm')"
-                  />
-                  <span class="error-message" *ngIf="getFieldError('heightCm')">
-                    {{ getFieldError('heightCm') }}
-                  </span>
-                </div>
-
-                <div class="form-group">
-                  <label for="dateOfBirth">Date of Birth *</label>
-                  <input
-                    type="date"
-                    id="dateOfBirth"
-                    formControlName="dateOfBirth"
-                    [class.invalid]="getFieldError('dateOfBirth')"
-                  />
-                  <span class="error-message" *ngIf="getFieldError('dateOfBirth')">
-                    {{ getFieldError('dateOfBirth') }}
-                  </span>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="gender">Gender *</label>
-                <select
-                  id="gender"
-                  formControlName="gender"
-                  [class.invalid]="getFieldError('gender')"
-                >
-                  <option value="">Select gender</option>
-                  <option *ngFor="let option of genderOptions" [value]="option.value">
-                    {{ option.label }}
-                  </option>
-                </select>
-                <span class="error-message" *ngIf="getFieldError('gender')">
-                  {{ getFieldError('gender') }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Current & Target Weight Section -->
-            <div class="form-section">
-              <h4>Weight Information</h4>
-
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="currentWeightKg">Current Weight (kg) *</label>
-                  <input
-                    type="number"
-                    id="currentWeightKg"
-                    formControlName="currentWeightKg"
-                    step="0.1"
-                    placeholder="e.g., 70.5"
-                    [class.invalid]="getFieldError('currentWeightKg')"
-                  />
-                  <span class="error-message" *ngIf="getFieldError('currentWeightKg')">
-                    {{ getFieldError('currentWeightKg') }}
-                  </span>
-                </div>
-
-                <div class="form-group">
-                  <label for="targetWeightKg">Target Weight (kg) *</label>
-                  <input
-                    type="number"
-                    id="targetWeightKg"
-                    formControlName="targetWeightKg"
-                    step="0.1"
-                    placeholder="e.g., 65.0"
-                    [class.invalid]="getFieldError('targetWeightKg')"
-                  />
-                  <span class="error-message" *ngIf="getFieldError('targetWeightKg')">
-                    {{ getFieldError('targetWeightKg') }}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Activity & Goals Section -->
-            <div class="form-section">
-              <h4>Activity & Goals</h4>
-
-              <div class="form-group">
-                <label for="activityLevel">Activity Level *</label>
-                <select
-                  id="activityLevel"
-                  formControlName="activityLevel"
-                  [class.invalid]="getFieldError('activityLevel')"
-                >
-                  <option value="">Select activity level</option>
-                  <option *ngFor="let option of activityLevelOptions" [value]="option.value">
-                    {{ option.label }}
-                  </option>
-                </select>
-                <span class="help-text">How active are you on a typical day?</span>
-                <span class="error-message" *ngIf="getFieldError('activityLevel')">
-                  {{ getFieldError('activityLevel') }}
-                </span>
-              </div>
-
-              <div class="form-group">
-                <label for="weightGoal">Weight Goal *</label>
-                <select
-                  id="weightGoal"
-                  formControlName="weightGoal"
-                  [class.invalid]="getFieldError('weightGoal')"
-                >
-                  <option value="">Select weight goal</option>
-                  <option *ngFor="let option of weightGoalOptions" [value]="option.value">
-                    {{ option.label }} ({{ option.description }})
-                  </option>
-                </select>
-                <span class="help-text">Choose your desired rate of weight change</span>
-                <span class="error-message" *ngIf="getFieldError('weightGoal')">
-                  {{ getFieldError('weightGoal') }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Form Actions -->
-            <div class="form-actions">
-              <button type="button" class="btn-secondary" (click)="toggleEditMode()" [disabled]="isLoading">
-                Cancel
-              </button>
-              <button type="submit" class="btn-primary" [disabled]="isLoading">
-                {{ isLoading ? 'Saving...' : 'Save Profile' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- No Profile Message -->
-    <div *ngIf="!isEditMode && !profile" class="no-profile">
-      <div class="card">
-        <div class="card-body text-center">
-          <h3>Welcome to FitTrack!</h3>
-          <p>Let's set up your profile to get personalized recommendations.</p>
-          <button class="btn-primary" (click)="toggleEditMode()">Create Profile</button>
-        </div>
-      </div>
-    </div>
-
-  </div>
+          <div class="form-actions">
+            <button
+              ft-button
+              variant="primary"
+              type="submit"
+              [attr.disabled]="isLoading ? true : null"
+            >
+              <ft-icon name="save" [size]="14" />
+              @if (isLoading) {
+                <ng-container i18n="@@profile.saving">Saving…</ng-container>
+              } @else {
+                <ng-container i18n="@@profile.save">Save profile</ng-container>
+              }
+            </button>
+          </div>
+        </form>
+      </ft-card>
+    } @else {
+      <ft-card>
+        <ft-empty-state
+          title="Set up your profile"
+          i18n-title="@@profile.emptyTitle"
+          message="Add your details to compute BMR, TDEE, and macro targets."
+          i18n-message="@@profile.emptyMessage"
+          icon="user"
+        >
+          <button ft-button variant="primary" (click)="isEditMode = true" i18n="@@profile.createCta">
+            Set up profile
+          </button>
+        </ft-empty-state>
+      </ft-card>
+    }
+  }
 </div>

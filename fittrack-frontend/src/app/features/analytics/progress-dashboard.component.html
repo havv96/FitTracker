@@ -1,190 +1,265 @@
-
-    <div class="progress-dashboard-container">
-      <!-- Header -->
-      <div class="header">
-        <h2>Progress & Analytics</h2>
-        <p class="subtitle">Track your fitness journey and achievements</p>
+<div class="analytics">
+  @if (loading()) {
+    <ft-card>
+      <div class="loading mono" i18n="@@analytics.loading">Loading analytics…</div>
+    </ft-card>
+  } @else if (error()) {
+    <ft-card>
+      <div class="error-block">
+        <div class="error-msg">{{ error() }}</div>
+        <button ft-button variant="primary" (click)="loadAllData()" i18n="@@common.retry">Retry</button>
       </div>
-
-      <!-- Loading -->
-      <div *ngIf="loading()" class="loading">
-        <p>Loading your progress...</p>
-      </div>
-
-      <!-- Error -->
-      <div *ngIf="error()" class="error-banner">
-        {{ error() }}
-        <button (click)="error.set(null)" class="btn-close">×</button>
-      </div>
-
-      <!-- Summary Cards -->
-      <div *ngIf="!loading() && summary()" class="summary-section">
-        <div class="stat-card-grid">
-          <div class="stat-card primary">
-            <div class="stat-icon">🏋️</div>
-            <div class="stat-content">
-              <div class="stat-value">{{ summary()!.totalWorkouts }}</div>
-              <div class="stat-label">Total Workouts</div>
-            </div>
-          </div>
-
-          <div class="stat-card success">
-            <div class="stat-icon">💪</div>
-            <div class="stat-content">
-              <div class="stat-value">{{ formatVolume(summary()!.totalVolume) }}</div>
-              <div class="stat-label">Total Volume</div>
-            </div>
-          </div>
-
-          <div class="stat-card warning">
-            <div class="stat-icon">🔥</div>
-            <div class="stat-content">
-              <div class="stat-value">{{ summary()!.consistencyStreak }}</div>
-              <div class="stat-label">Current Streak</div>
-            </div>
-          </div>
-
-          <div class="stat-card info">
-            <div class="stat-icon">⏱️</div>
-            <div class="stat-content">
-              <div class="stat-value">{{ summary()!.avgWorkoutDuration }}m</div>
-              <div class="stat-label">Avg Duration</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Weekly Progress -->
-      <div *ngIf="weeklyProgress().length > 0" class="section">
-        <h3>Weekly Progress</h3>
-        <div class="progress-cards">
-          <div *ngFor="let week of weeklyProgress()" class="progress-card">
-            <div class="progress-header">
-              <span class="week-label">{{ formatWeek(week.weekStartDate) }}</span>
-              <span class="workout-count">{{ week.workoutCount }} workouts</span>
-            </div>
-            <div class="progress-stats">
-              <div class="progress-stat">
-                <span class="label">Volume:</span>
-                <span class="value">{{ formatVolume(week.totalVolume) }}</span>
-              </div>
-              <div class="progress-stat">
-                <span class="label">Avg Duration:</span>
-                <span class="value">{{ week.avgWorkoutDuration }}m</span>
-              </div>
-              <div class="progress-stat">
-                <span class="label">Calories:</span>
-                <span class="value">{{ week.caloriesConsumed }} kcal</span>
-              </div>
-              <div class="progress-stat">
-                <span class="label">Compliance:</span>
-                <span class="value">{{ week.complianceRate }}%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Personal Records -->
-      <div *ngIf="summary() && summary()!.personalRecords.length > 0" class="section">
-        <h3>Personal Records</h3>
-        <div class="records-grid">
-          <div *ngFor="let record of summary()!.personalRecords" class="record-card">
-            <div class="record-icon">🏆</div>
-            <div class="record-info">
-              <h4>{{ record.exerciseName }}</h4>
-              <div class="record-details">
-                <span class="record-value">{{ record.bestWeight }} kg</span>
-                <span class="record-label">× {{ record.bestReps }} reps</span>
-              </div>
-              <div class="record-date">{{ formatDate(record.achievedDate) }}</div>
-            </div>
-          </div>
-
-          <div *ngIf="summary()!.personalRecords.length === 0" class="no-records">
-            <p>No personal records yet. Keep pushing!</p>
-            <button routerLink="/workout/session" class="btn-primary">Start Workout</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Body Metrics -->
-      <div *ngIf="bodyMetrics().length > 0" class="section">
-        <div class="section-header">
-          <h3>Body Metrics</h3>
-          <button (click)="showAddMetrics()" class="btn-secondary">+ Add Entry</button>
-        </div>
-
-        <div class="metrics-chart">
-          <div class="weight-summary">
-            <div class="summary-item">
-              <span class="label">Current Weight:</span>
-              <span class="value highlight">{{ bodyMetrics()[0]?.weightKg }} kg</span>
-            </div>
-            <div class="summary-item">
-              <span class="label">Change:</span>
-              <span class="value" [class]="getWeightChangeClass()">
-                {{ weightChange().total >= 0 ? '+' : '' }}{{ weightChange().total }} kg
-                ({{ weightChange().percentage >= 0 ? '+' : '' }}{{ weightChange().percentage }}%)
-              </span>
-            </div>
-            <div class="summary-item">
-              <span class="label">Trend:</span>
-              <span class="value">{{ getTrendEmoji() }} {{ weightTrend() }}</span>
-            </div>
-          </div>
-
-          <div class="metrics-list">
-            <div *ngFor="let metric of bodyMetrics()" class="metric-row">
-              <span class="metric-date">{{ formatDate(metric.date) }}</span>
-              <span class="metric-weight">{{ metric.weightKg }} kg</span>
-              <span *ngIf="metric.bodyFatPercentage" class="metric-bf">
-                BF: {{ metric.bodyFatPercentage }}%
-              </span>
-              <div class="metric-actions">
-                <button (click)="showEditMetrics(metric)" class="btn-icon-small" title="Edit">✏️</button>
-                <button (click)="deleteMetric(metric.id)" class="btn-icon-small" title="Delete">🗑️</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Empty State -->
-      <div *ngIf="!loading() && !summary()" class="empty-state">
-        <div class="empty-icon">📊</div>
-        <h3>No Data Yet</h3>
-        <p>Start tracking your workouts and nutrition to see your progress!</p>
-        <div class="empty-actions">
-          <button routerLink="/workout/session" class="btn-primary">Start Workout</button>
-          <button routerLink="/nutrition" class="btn-secondary">Log Nutrition</button>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="quick-actions-section">
-        <h3>Quick Actions</h3>
-        <div class="actions-grid">
-          <button routerLink="/workout/history" class="action-btn">
-            📈 View Workout History
-          </button>
-          <button routerLink="/nutrition" class="action-btn">
-            🍎 Track Nutrition
-          </button>
-          <button (click)="showAddMetrics()" class="action-btn">
-            ⚖️ Log Body Weight
-          </button>
-          <button routerLink="/profile" class="action-btn">
-            👤 Update Profile
-          </button>
-        </div>
-      </div>
-
-      <!-- Body Metrics Modal -->
-      <app-body-metrics-modal
-        *ngIf="showModal()"
-        [existingMetric]="editingMetric()"
-        (saved)="onMetricsSaved()"
-        (cancelled)="onModalCancelled()"
-      ></app-body-metrics-modal>
+    </ft-card>
+  } @else if (summary(); as s) {
+    <div class="stats-row">
+      <ft-stat-card
+        i18n-label="@@analytics.stat.workouts"
+        label="Total workouts"
+        [value]="s.totalWorkouts"
+      />
+      <ft-stat-card
+        i18n-label="@@analytics.stat.volume"
+        label="Total volume"
+        [value]="formatVolume(s.totalVolume)"
+      />
+      <ft-stat-card
+        i18n-label="@@analytics.stat.streak"
+        label="Current streak"
+        [value]="s.consistencyStreak"
+        unit="days"
+      />
+      <ft-stat-card
+        i18n-label="@@analytics.stat.avgDuration"
+        label="Avg duration"
+        [value]="s.avgWorkoutDuration"
+        unit="min"
+      />
     </div>
+
+    <div class="grid-2">
+      <ft-card title="Today's targets" i18n-title="@@analytics.ringsTitle">
+        <div class="rings-wrap">
+          <ft-activity-rings [rings]="rings()" [size]="140" />
+          <ul class="ring-legend">
+            <li class="ring-item">
+              <span class="ring-dot" style="background: var(--accent)"></span>
+              <span class="ring-label" i18n="@@analytics.legend.streak">Streak</span>
+              <span class="ring-value mono">{{ s.consistencyStreak }} / 30</span>
+            </li>
+            <li class="ring-item">
+              <span class="ring-dot" style="background: var(--success)"></span>
+              <span class="ring-label" i18n="@@analytics.legend.calorie">Calorie compliance</span>
+              <span class="ring-value mono">{{ s.calorieCompliance }}%</span>
+            </li>
+            <li class="ring-item">
+              <span class="ring-dot" style="background: var(--warn)"></span>
+              <span class="ring-label" i18n="@@analytics.legend.protein">Protein compliance</span>
+              <span class="ring-value mono">{{ s.proteinCompliance }}%</span>
+            </li>
+          </ul>
+        </div>
+      </ft-card>
+
+      <ft-card title="Weight trend" i18n-title="@@analytics.weightTitle">
+        @if (weightPoints().length >= 2) {
+          <ft-area-chart
+            [points]="weightPoints()"
+            [lastLabel]="latestWeight()?.weightKg + ' kg'"
+          />
+          <div class="chart-caption mono">
+            <ng-container i18n="@@analytics.weightRange">Last</ng-container>
+            {{ bodyMetrics().length }}
+            <ng-container i18n="@@analytics.entries">entries</ng-container>
+            <ng-container *ngIf="weightDeltaLabel(); let d">· {{ d }}</ng-container>
+          </div>
+        } @else {
+          <ft-empty-state
+            title="Not enough data"
+            i18n-title="@@analytics.weightEmpty"
+            message="Log two or more body-weight entries to see the trend."
+            i18n-message="@@analytics.weightEmptyMessage"
+            icon="scale"
+          >
+            <button ft-button variant="primary" (click)="showAddMetrics()" i18n="@@analytics.logMetric">
+              Log weight
+            </button>
+          </ft-empty-state>
+        }
+      </ft-card>
+    </div>
+
+    <div class="grid-2">
+      <ft-card title="Volume · last weeks" i18n-title="@@analytics.volumeTitle">
+        @if (volumeSeries().length >= 2) {
+          <ft-sparkline [points]="volumeSeries()" tone="success" [latestLabel]="latestVolume()" />
+          <div class="chart-caption mono">
+            {{ volumeSeries().length }}
+            <ng-container i18n="@@analytics.weeks">weeks</ng-container>
+          </div>
+        } @else {
+          <ft-empty-state
+            title="Log more workouts"
+            i18n-title="@@analytics.volumeEmpty"
+            message="Two weeks of workouts unlocks the volume trend."
+            i18n-message="@@analytics.volumeEmptyMessage"
+            icon="chart"
+          />
+        }
+      </ft-card>
+
+      <ft-card title="Personal records" i18n-title="@@analytics.prTitle">
+        @if (s.personalRecords.length) {
+          <ul class="pr-list">
+            @for (pr of s.personalRecords.slice(0, 5); track pr.exerciseName) {
+              <li class="pr-row">
+                <ft-icon name="trophy" [size]="16" />
+                <div class="pr-body">
+                  <div class="pr-name">{{ pr.exerciseName }}</div>
+                  <div class="pr-meta mono">
+                    {{ pr.bestWeight }} kg × {{ pr.bestReps }}
+                    <ng-container i18n="@@analytics.pr.on">on</ng-container>
+                    {{ formatDate(pr.achievedDate) }}
+                  </div>
+                </div>
+                <ft-tag tone="warn">PR</ft-tag>
+              </li>
+            }
+          </ul>
+        } @else {
+          <ft-empty-state
+            title="No personal records yet"
+            i18n-title="@@analytics.prEmpty"
+            message="Log a couple sessions and PRs will appear here automatically."
+            i18n-message="@@analytics.prEmptyMessage"
+            icon="trophy"
+          />
+        }
+      </ft-card>
+    </div>
+
+    <ft-card title="Weekly progress" i18n-title="@@analytics.weeklyTitle">
+      @if (s.recentProgress.length) {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th i18n="@@analytics.week">Week</th>
+              <th i18n="@@table.workouts">Workouts</th>
+              <th i18n="@@table.volume">Volume</th>
+              <th i18n="@@analytics.avgDur">Avg dur.</th>
+              <th i18n="@@analytics.compliance">Compliance</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (w of s.recentProgress; track w.weekStartDate) {
+              <tr>
+                <td class="mono">{{ formatWeek(w.weekStartDate) }}</td>
+                <td>{{ w.workoutCount }}</td>
+                <td class="mono">{{ w.totalVolume | number: '1.0-0' }} kg</td>
+                <td class="mono">{{ w.avgWorkoutDuration }} min</td>
+                <td>
+                  <div class="compliance">
+                    <ft-progress-bar [value]="w.complianceRate" tone="success" />
+                    <span class="mono">{{ w.complianceRate }}%</span>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <ft-empty-state
+          title="No weekly data"
+          i18n-title="@@analytics.weeklyEmpty"
+          message="Weekly summaries appear after a full week of tracking."
+          i18n-message="@@analytics.weeklyEmptyMessage"
+          icon="calendar"
+        />
+      }
+    </ft-card>
+
+    <ft-card [padded]="false" title="Body metrics" i18n-title="@@analytics.bodyTitle">
+      <div card-actions>
+        <button ft-button size="sm" variant="primary" (click)="showAddMetrics()">
+          <ft-icon name="plus" [size]="14" />
+          <span i18n="@@analytics.addMetric">Add entry</span>
+        </button>
+      </div>
+      @if (bodyMetrics().length) {
+        <div class="metric-list">
+          @for (m of bodyMetrics(); track m.id) {
+            <div class="metric-row">
+              <div class="metric-date mono">{{ formatDate(m.date) }}</div>
+              <div class="metric-body">
+                <div class="metric-primary mono">{{ m.weightKg }} kg</div>
+                <div class="metric-detail mono">
+                  @if (m.bodyFatPercentage) {
+                    <span>BF {{ m.bodyFatPercentage }}%</span>
+                  }
+                  @if (m.muscleMassKg) {
+                    <span>MM {{ m.muscleMassKg }} kg</span>
+                  }
+                  @if (m.waistCm) {
+                    <span>W {{ m.waistCm }}</span>
+                  }
+                </div>
+              </div>
+              <div class="metric-actions">
+                <button
+                  ft-button
+                  size="sm"
+                  (click)="showEditMetrics(m)"
+                  i18n-aria-label="@@common.edit"
+                  aria-label="Edit"
+                >
+                  <ft-icon name="edit" [size]="14" />
+                </button>
+                <button
+                  ft-button
+                  size="sm"
+                  variant="danger"
+                  (click)="deleteMetric(m.id)"
+                  i18n-aria-label="@@common.delete"
+                  aria-label="Delete"
+                >
+                  <ft-icon name="trash" [size]="14" />
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="body-empty">
+          <ft-empty-state
+            title="No body metrics logged"
+            i18n-title="@@analytics.bodyEmpty"
+            message="Track weight, body fat, and measurements to unlock trend charts."
+            i18n-message="@@analytics.bodyEmptyMessage"
+            icon="scale"
+          >
+            <button ft-button variant="primary" (click)="showAddMetrics()" i18n="@@analytics.logFirst">
+              Log first entry
+            </button>
+          </ft-empty-state>
+        </div>
+      }
+    </ft-card>
+  } @else {
+    <ft-card>
+      <ft-empty-state
+        title="No analytics yet"
+        i18n-title="@@analytics.rootEmpty"
+        message="Start a workout and log some food to populate this page."
+        i18n-message="@@analytics.rootEmptyMessage"
+        icon="chart"
+      />
+    </ft-card>
+  }
+
+  @if (showModal()) {
+    <app-body-metrics-modal
+      [existingMetric]="editingMetric()"
+      (saved)="onMetricsSaved()"
+      (cancelled)="onModalCancelled()"
+    />
+  }
+</div>

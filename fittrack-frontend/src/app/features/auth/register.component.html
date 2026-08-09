@@ -1,56 +1,70 @@
-    <div class="register-container">
-      <div class="register-card">
-        <div class="logo">
-          <h1>FitTrack Pro</h1>
-          <p>Start your fitness journey today</p>
-        </div>
+<div class="auth-viewport">
+  <div class="auth-card">
+    <div class="auth-stripe" aria-hidden="true"></div>
 
-        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-          <h2>Create Account</h2>
-
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              formControlName="email"
-              class="form-input"
-              placeholder="Enter your email"
-            />
-            <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="error-text">
-              Please enter a valid email
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              formControlName="password"
-              class="form-input"
-              placeholder="Min 8 characters, 1 uppercase, 1 digit"
-            />
-            <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="error-text">
-              Password must be at least 8 characters with 1 uppercase letter and 1 digit
-            </div>
-          </div>
-
-          <div *ngIf="errorMessage" class="error-banner">
-            {{ errorMessage }}
-          </div>
-
-          <button
-            type="submit"
-            [disabled]="registerForm.invalid || loading"
-            class="btn-primary btn-block"
-          >
-            {{ loading ? 'Creating account...' : 'Register' }}
-          </button>
-
-          <div class="login-link">
-            Already have an account? <a routerLink="/auth/login">Login here</a>
-          </div>
-        </form>
+    <div class="auth-brand">
+      <div class="logo-mark" aria-hidden="true">
+        <ft-icon name="logo" />
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">FitTrack Pro</div>
+        <div class="brand-tag" i18n="@@auth.register.tagline">Create your training account</div>
       </div>
     </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form" novalidate>
+      <ft-form-field
+        for="reg-email"
+        label="Email"
+        i18n-label="@@auth.register.emailLabel"
+        [error]="showEmailError() ? emailErrorText : null"
+      >
+        <input
+          id="reg-email"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          placeholder="you@example.com"
+        />
+      </ft-form-field>
+
+      <ft-form-field
+        for="reg-password"
+        label="Password"
+        i18n-label="@@auth.register.passwordLabel"
+        [hint]="passwordHintText"
+        [error]="showPasswordError() ? passwordErrorText : null"
+      >
+        <input
+          id="reg-password"
+          type="password"
+          formControlName="password"
+          autocomplete="new-password"
+        />
+      </ft-form-field>
+
+      @if (errorMessage) {
+        <div class="error-banner" role="alert">{{ errorMessage }}</div>
+      }
+
+      <button
+        ft-button
+        variant="primary"
+        [block]="true"
+        type="submit"
+        [attr.disabled]="registerForm.invalid || loading ? true : null"
+      >
+        @if (loading) {
+          <ng-container i18n="@@auth.register.submitting">Creating account…</ng-container>
+        } @else {
+          <ng-container i18n="@@auth.register.submit">Create account</ng-container>
+        }
+      </button>
+
+      <div class="alt-link">
+        <span i18n="@@auth.register.loginPrompt">Already have an account?</span>
+        <a routerLink="/auth/login" i18n="@@auth.register.loginCta">Sign in</a>
+      </div>
+    </form>
+  </div>
+</div>
