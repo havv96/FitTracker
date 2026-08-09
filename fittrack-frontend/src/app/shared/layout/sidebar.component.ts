@@ -1,5 +1,5 @@
 import { AsyncPipe, UpperCasePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { LocaleService } from '../../core/services/locale.service';
@@ -18,6 +18,8 @@ export class SidebarComponent {
   private readonly auth = inject(AuthService);
   readonly theme = inject(ThemeService);
   readonly locale = inject(LocaleService);
+
+  readonly open = input(false);
 
   readonly currentUser$ = this.auth.currentUser$;
 

@@ -19,11 +19,32 @@
   overflow-y: auto;
 }
 
+.backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+  z-index: 20;
+}
+
 @media (max-width: 900px) {
   .main {
     margin-left: 0;
   }
   .content {
     padding: 16px;
+  }
+  .backdrop {
+    display: block;
+  }
+  .backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
   }
 }

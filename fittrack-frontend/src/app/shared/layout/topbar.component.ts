@@ -1,8 +1,16 @@
 import { NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+} from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
+import { FtIconComponent } from '../ui/ft-icon.component';
 
 interface TitleContext {
   titleKey?: string;
@@ -13,13 +21,16 @@ interface TitleContext {
   selector: 'app-topbar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgIf],
+  imports: [NgIf, FtIconComponent],
   templateUrl: './topbar.component.html',
   styleUrl: './topbar.component.scss',
 })
 export class TopbarComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+
+  readonly menuOpen = input(false);
+  readonly menuToggle = output<void>();
 
   readonly ctx = toSignal(
     this.router.events.pipe(

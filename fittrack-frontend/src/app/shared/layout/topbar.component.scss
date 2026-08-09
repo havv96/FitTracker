@@ -23,6 +23,25 @@
   min-width: 0;
 }
 
+.menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.1s ease, border-color 0.1s ease;
+}
+.menu-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 .topbar-title {
   font-weight: 700;
   font-size: 18px;
@@ -49,4 +68,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    padding: 0 16px;
+  }
+  .menu-btn {
+    display: inline-flex;
+  }
 }

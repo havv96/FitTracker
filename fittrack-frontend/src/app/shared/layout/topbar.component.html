@@ -1,5 +1,16 @@
 <header class="topbar">
   <div class="left">
+    <button
+      type="button"
+      class="menu-btn"
+      (click)="menuToggle.emit()"
+      [attr.aria-expanded]="menuOpen()"
+      aria-controls="app-sidebar"
+      i18n-aria-label="@@topbar.menuAria"
+      aria-label="Toggle navigation"
+    >
+      <ft-icon name="menu" [size]="18" />
+    </button>
     <h1 class="topbar-title">{{ title() }}</h1>
     <span class="topbar-badge" *ngIf="badge()">{{ badge() }}</span>
   </div>
