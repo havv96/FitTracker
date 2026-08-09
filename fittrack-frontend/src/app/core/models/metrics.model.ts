@@ -1,25 +1,5 @@
 // Metrics and Analytics Models
 
-export interface DailyStats {
-  id: number;
-  userId: number;
-  date: string;
-  totalCalories: number;
-  totalProtein: number;
-  totalCarbs: number;
-  totalFat: number;
-  totalVolume: number;
-  totalSets: number;
-  totalReps: number;
-  workoutDurationMinutes: number;
-  caloriesBurned: number;
-  waterIntakeMl?: number;
-  sleepHours?: number;
-  mood?: string;
-  energyLevel?: number;
-  notes?: string;
-}
-
 export interface WeeklyProgress {
   weekStartDate: string;
   workoutCount: number;
@@ -28,26 +8,6 @@ export interface WeeklyProgress {
   caloriesConsumed: number;
   avgDailyCalories: number;
   complianceRate: number;
-}
-
-export interface MonthlyProgress {
-  month: string;
-  year: number;
-  workoutCount: number;
-  totalVolume: number;
-  avgProtein: number;
-  avgCalories: number;
-  bestWorkout: {
-    date: string;
-    volume: number;
-  };
-}
-
-export interface ProgressChartData {
-  dates: string[];
-  weights: number[];
-  volumes: number[];
-  calories: number[];
 }
 
 export interface PersonalRecords {
@@ -115,11 +75,6 @@ export interface BodyMetricsRequest {
   armsCm?: number;
   legsCm?: number;
   notes?: string;
-}
-
-export interface DateRangeRequest {
-  startDate: string;
-  endDate: string;
 }
 
 // Chart data interfaces

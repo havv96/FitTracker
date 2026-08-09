@@ -4,7 +4,6 @@ export interface FoodItem {
   id: number;
   name: string;
   brand?: string;
-  category: FoodCategory;
   servingSize: number;
   servingUnit: string;
   calories: number;
@@ -14,20 +13,9 @@ export interface FoodItem {
   fiberG?: number;
   sugarG?: number;
   sodiumMg?: number;
-  isCustom: boolean;
-  userId?: number;
+  barcode?: string;
+  isVerified?: boolean;
   createdAt: string;
-}
-
-export enum FoodCategory {
-  PROTEIN = 'PROTEIN',
-  CARBS = 'CARBS',
-  VEGETABLES = 'VEGETABLES',
-  FRUITS = 'FRUITS',
-  DAIRY = 'DAIRY',
-  SNACKS = 'SNACKS',
-  BEVERAGES = 'BEVERAGES',
-  OTHER = 'OTHER'
 }
 
 export interface NutritionLog {
@@ -71,21 +59,6 @@ export interface DailyNutritionSummary {
 }
 
 // Request DTOs
-export interface FoodItemRequest {
-  name: string;
-  brand?: string;
-  category: FoodCategory;
-  servingSize: number;
-  servingUnit: string;
-  calories: number;
-  proteinG: number;
-  carbsG: number;
-  fatG: number;
-  fiberG?: number;
-  sugarG?: number;
-  sodiumMg?: number;
-}
-
 export interface NutritionLogRequest {
   foodItemId: number;
   mealType: MealType;
@@ -96,7 +69,6 @@ export interface NutritionLogRequest {
 
 export interface SearchFoodParams {
   searchTerm?: string;
-  category?: FoodCategory;
   page?: number;
   size?: number;
 }
@@ -107,12 +79,4 @@ export interface FoodItemsPage {
   totalPages: number;
   totalElements: number;
   currentPage: number;
-}
-
-export interface NutritionStats {
-  currentStreak: number;
-  avgCalories: number;
-  avgProtein: number;
-  daysLogged: number;
-  complianceRate: number;
 }

@@ -2,15 +2,11 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import {
-  DailyStats,
   WeeklyProgress,
-  MonthlyProgress,
-  ProgressChartData,
   PersonalRecords,
   BodyMetrics,
   BodyMetricsRequest,
-  AnalyticsSummary,
-  DateRangeRequest
+  AnalyticsSummary
 } from '../models/metrics.model';
 import { environment } from '../../../environments/environment';
 
@@ -21,12 +17,9 @@ export class MetricsService {
   private http = inject(HttpClient);
   private readonly API_URL = `${environment.apiBaseUrl}/metrics`;
 
-  // State management
   private analyticsSummary = signal<AnalyticsSummary | null>(null);
   private bodyMetricsHistory = signal<BodyMetrics[]>([]);
-  private progressData = signal<ProgressChartData | null>(null);
 
-  // Public getters
   get summary() {
     return this.analyticsSummary.asReadonly();
   }
@@ -35,54 +28,15 @@ export class MetricsService {
     return this.bodyMetricsHistory.asReadonly();
   }
 
-  get chartData() {
-    return this.progressData.asReadonly();
-  }
-
-  // Daily Stats Operations
-  getDailyStats(date: string): Observable<DailyStats> {
-    return this.http.get<DailyStats>(`${this.API_URL}/daily/${date}`);
-  }
-
-  getStatsRange(startDate: string, endDate: string): Observable<DailyStats[]> {
-    const params = new HttpParams()
-      .set('startDate', startDate)
-      .set('endDate', endDate);
-
-    return this.http.get<DailyStats[]>(`${this.API_URL}/daily/range`, { params });
-  }
-
-  // Progress Tracking
   getWeeklyProgress(weeksBack: number = 4): Observable<WeeklyProgress[]> {
     const params = new HttpParams().set('weeks', weeksBack.toString());
     return this.http.get<WeeklyProgress[]>(`${this.API_URL}/progress/weekly`, { params });
   }
 
-  getMonthlyProgress(monthsBack: number = 6): Observable<MonthlyProgress[]> {
-    const params = new HttpParams().set('months', monthsBack.toString());
-    return this.http.get<MonthlyProgress[]>(`${this.API_URL}/progress/monthly`, { params });
-  }
-
-  getProgressChart(startDate: string, endDate: string): Observable<ProgressChartData> {
-    const params = new HttpParams()
-      .set('startDate', startDate)
-      .set('endDate', endDate);
-
-    return this.http.get<ProgressChartData>(`${this.API_URL}/progress/chart`, { params }).pipe(
-      tap(data => this.progressData.set(data))
-    );
-  }
-
-  // Personal Records
   getPersonalRecords(): Observable<PersonalRecords[]> {
     return this.http.get<PersonalRecords[]>(`${this.API_URL}/personal-records`);
   }
 
-  getExercisePersonalRecord(exerciseId: number): Observable<PersonalRecords> {
-    return this.http.get<PersonalRecords>(`${this.API_URL}/personal-records/${exerciseId}`);
-  }
-
-  // Body Metrics
   getBodyMetrics(startDate?: string, endDate?: string): Observable<BodyMetrics[]> {
     let params = new HttpParams();
     if (startDate) params = params.set('startDate', startDate);
@@ -96,7 +50,6 @@ export class MetricsService {
   addBodyMetrics(request: BodyMetricsRequest): Observable<BodyMetrics> {
     return this.http.post<BodyMetrics>(`${this.API_URL}/body-metrics`, request).pipe(
       tap(() => {
-        // Refresh body metrics
         this.getBodyMetrics().subscribe();
       })
     );
@@ -118,27 +71,12 @@ export class MetricsService {
     );
   }
 
-  // Analytics Summary
   getAnalyticsSummary(): Observable<AnalyticsSummary> {
     return this.http.get<AnalyticsSummary>(`${this.API_URL}/summary`).pipe(
       tap(summary => this.analyticsSummary.set(summary))
     );
   }
 
-  // Streak & Consistency
-  getCurrentStreak(): Observable<{ currentStreak: number; bestStreak: number }> {
-    return this.http.get<{ currentStreak: number; bestStreak: number }>(`${this.API_URL}/streak`);
-  }
-
-  getConsistencyRate(days: number = 30): Observable<{ rate: number; workoutDays: number; totalDays: number }> {
-    const params = new HttpParams().set('days', days.toString());
-    return this.http.get<{ rate: number; workoutDays: number; totalDays: number }>(
-      `${this.API_URL}/consistency`,
-      { params }
-    );
-  }
-
-  // Helper Methods
   calculateWeightChange(metrics: BodyMetrics[]): { total: number; percentage: number } {
     if (metrics.length < 2) {
       return { total: 0, percentage: 0 };

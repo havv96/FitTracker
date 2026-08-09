@@ -3,12 +3,11 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FoodCategory, FoodItem, FoodItemsPage, MealType } from '../../core/models/nutrition.model';
+import { FoodItem, FoodItemsPage, MealType } from '../../core/models/nutrition.model';
 import { NutritionService } from '../../core/services/nutrition.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { FtButtonComponent } from '../../shared/ui/ft-button.component';
 import { FtCardComponent } from '../../shared/ui/ft-card.component';
-import { FtChipComponent } from '../../shared/ui/ft-chip.component';
 import { FtEmptyStateComponent } from '../../shared/ui/ft-empty-state.component';
 import { FtFormFieldComponent } from '../../shared/ui/ft-form-field.component';
 import { FtIconComponent } from '../../shared/ui/ft-icon.component';
@@ -23,7 +22,6 @@ import { FtTagComponent } from '../../shared/ui/ft-tag.component';
     ReactiveFormsModule,
     FtButtonComponent,
     FtCardComponent,
-    FtChipComponent,
     FtEmptyStateComponent,
     FtFormFieldComponent,
     FtIconComponent,
@@ -48,7 +46,6 @@ export class FoodSearchComponent implements OnInit {
   readonly logging = signal<boolean>(false);
 
   searchTerm = '';
-  readonly selectedCategory = signal<FoodCategory | null>(null);
   readonly currentPage = signal<number>(0);
   readonly totalPages = signal<number>(1);
   readonly totalResults = signal<number>(0);
@@ -57,7 +54,6 @@ export class FoodSearchComponent implements OnInit {
   targetMealType?: MealType;
   targetDate?: string;
 
-  readonly categories = Object.values(FoodCategory);
   readonly mealTypes = Object.values(MealType);
 
   readonly mealLabels: Record<MealType, string> = {
@@ -67,7 +63,7 @@ export class FoodSearchComponent implements OnInit {
     [MealType.SNACK]: $localize`:@@meal.snack:Snack`,
   };
 
-  readonly hasFilters = computed(() => !!(this.searchTerm || this.selectedCategory()));
+  readonly hasFilters = computed(() => !!this.searchTerm);
 
   logForm: FormGroup;
 
@@ -96,7 +92,6 @@ export class FoodSearchComponent implements OnInit {
     this.nutritionService
       .searchFood({
         searchTerm: this.searchTerm || undefined,
-        category: this.selectedCategory() ?? undefined,
         page: this.currentPage(),
         size: this.pageSize,
       })
@@ -123,15 +118,8 @@ export class FoodSearchComponent implements OnInit {
     }, 300);
   }
 
-  toggleCategory(cat: FoodCategory | null): void {
-    this.selectedCategory.update((c) => (c === cat ? null : cat));
-    this.currentPage.set(0);
-    this.searchFood();
-  }
-
   clearFilters(): void {
     this.searchTerm = '';
-    this.selectedCategory.set(null);
     this.currentPage.set(0);
     this.searchFood();
   }
