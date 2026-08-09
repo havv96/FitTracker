@@ -1,0 +1,9 @@
+<header class="topbar">
+  <div class="left">
+    <h1 class="topbar-title">{{ title() }}</h1>
+    <span class="topbar-badge" *ngIf="badge()">{{ badge() }}</span>
+  </div>
+  <div class="right">
+    <ng-content />
+  </div>
+</header>

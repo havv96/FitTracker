@@ -1,37 +1,35 @@
-.page-not-found {
-  min-height: 60vh;
+.notfound {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  gap: 12px;
+  padding: 24px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.glyph {
+  font-size: 128px;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  color: var(--muted);
+  line-height: 0.85;
+  margin-bottom: 8px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+
+.message {
+  color: var(--muted);
+  font-size: 14px;
+  max-width: 32ch;
   text-align: center;
-
-  h1 {
-    font-size: 5rem;
-    margin: 0 0 0.5rem;
-    color: #3b82f6;
-    font-weight: 700;
-  }
-
-  p {
-    font-size: 1.125rem;
-    color: #4b5563;
-    margin: 0 0 1.5rem;
-  }
-
-  .home-link {
-    display: inline-block;
-    padding: 0.625rem 1.5rem;
-    background: #3b82f6;
-    color: #fff;
-    border-radius: 6px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: background 0.15s ease;
-
-    &:hover {
-      background: #2563eb;
-    }
-  }
+  margin: 0 0 12px;
 }

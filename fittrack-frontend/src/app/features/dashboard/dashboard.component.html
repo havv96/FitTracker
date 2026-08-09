@@ -1,77 +1,172 @@
+<div class="dashboard">
+  <div class="hello">
+    <div class="eyebrow" i18n="@@dashboard.eyebrow">Today</div>
+    <h2 class="title" i18n="@@dashboard.welcome">Welcome back</h2>
+    @if (currentUserEmail(); as e) {
+      <p class="subtitle mono">{{ e }}</p>
+    }
+  </div>
 
-    <div class="dashboard-container">
-      <!-- Header with Navigation -->
-      <nav class="navbar">
-        <div class="nav-brand">
-          <h1>FitTrack Pro</h1>
-        </div>
-        <div class="nav-menu">
-          <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
-          <a routerLink="/workout/session" routerLinkActive="active">Workout</a>
-          <a routerLink="/nutrition" routerLinkActive="active">Nutrition</a>
-          <a routerLink="/analytics" routerLinkActive="active">Progress</a>
-          <a routerLink="/profile" routerLinkActive="active">Profile</a>
-        </div>
-        <div class="nav-actions">
-          <span class="user-email">{{ (currentUser | async)?.email }}</span>
-          <button (click)="logout()" class="btn-logout">Logout</button>
-        </div>
-      </nav>
-
-      <!-- Main Content -->
-      <div class="dashboard-content">
-        <div class="welcome-section">
-          <h2>Welcome back!</h2>
-          <p>Ready to crush your fitness goals today?</p>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="quick-actions">
-          <div class="action-card" routerLink="/workout/session">
-            <div class="action-icon">🏋️</div>
-            <h3>Start Workout</h3>
-            <p>Begin tracking your workout session</p>
-          </div>
-
-          <div class="action-card" routerLink="/nutrition">
-            <div class="action-icon">🍎</div>
-            <h3>Track Nutrition</h3>
-            <p>Log your meals and macros</p>
-          </div>
-
-          <div class="action-card" routerLink="/analytics">
-            <div class="action-icon">📊</div>
-            <h3>View Progress</h3>
-            <p>Track your fitness journey</p>
-          </div>
-
-          <div class="action-card" routerLink="/profile">
-            <div class="action-icon">👤</div>
-            <h3>Profile</h3>
-            <p>Manage your profile and goals</p>
-          </div>
-        </div>
-
-        <!-- Active Workout Alert -->
-        <div *ngIf="hasActiveWorkout()" class="active-workout-alert">
-          <h3>⚡ You have an active workout!</h3>
-          <p>Continue where you left off</p>
-          <button routerLink="/workout/session" class="btn-primary">
-            Resume Workout
-          </button>
-        </div>
-
-        <!-- Coming Soon Features -->
-        <div class="coming-soon">
-          <h3>Coming Soon</h3>
-          <div class="feature-list">
-            <div class="feature-item">💧 Hydration Monitor</div>
-            <div class="feature-item">😴 Sleep Tracking</div>
-            <div class="feature-item">📈 Advanced Analytics</div>
-            <div class="feature-item">🎯 Goal Setting & Reminders</div>
-            <div class="feature-item">📱 Progressive Web App</div>
-            <div class="feature-item">🏆 Achievements & Streaks</div>
-          </div>
-        </div>
+  @if (hasActiveWorkout()) {
+    <div class="active-alert">
+      <div class="active-alert-body">
+        <div class="alert-eyebrow" i18n="@@dashboard.active.badge">Live</div>
+        <div class="alert-title" i18n="@@dashboard.active.title">You have an active workout</div>
+        <div class="alert-sub" i18n="@@dashboard.active.sub">Pick up where you left off</div>
       </div>
+      <a ft-button variant="primary" routerLink="/workout/session" i18n="@@dashboard.active.cta">
+        Resume workout
+      </a>
     </div>
+  }
+
+  <div class="stats-row">
+    <ft-stat-card
+      i18n-label="@@dashboard.stat.calories"
+      label="Calories today"
+      [value]="caloriesLine().consumed"
+      unit="kcal"
+      [target]="caloriesLine().target || null"
+    />
+    <ft-stat-card
+      i18n-label="@@dashboard.stat.protein"
+      label="Protein"
+      [value]="proteinLine().consumed"
+      unit="g"
+      [target]="proteinLine().target || null"
+    />
+    <ft-stat-card
+      i18n-label="@@dashboard.stat.workouts"
+      label="Workouts this week"
+      [value]="weeklyWorkoutCount()"
+      unit="/ 5"
+    />
+    <ft-stat-card
+      i18n-label="@@dashboard.stat.volume"
+      label="Weekly volume"
+      [value]="volumeDisplay()"
+      unit="kg"
+    />
+  </div>
+
+  <div class="grid-aside">
+    <div class="stack-lg">
+      <ft-card title="Today's targets" i18n-title="@@dashboard.rings.title">
+        <div class="rings-wrap">
+          <ft-activity-rings [rings]="rings()" [size]="140" />
+          <ul class="ring-legend">
+            <li class="ring-item">
+              <span class="ring-dot" style="background: var(--accent)"></span>
+              <span class="ring-label" i18n="@@dashboard.rings.calories">Calories</span>
+              <span class="ring-value mono">{{ caloriesLine().consumed }} / {{ caloriesLine().target }}</span>
+            </li>
+            <li class="ring-item">
+              <span class="ring-dot" style="background: var(--success)"></span>
+              <span class="ring-label" i18n="@@dashboard.rings.protein">Protein</span>
+              <span class="ring-value mono">{{ proteinLine().consumed }}g / {{ proteinLine().target }}g</span>
+            </li>
+            <li class="ring-item">
+              <span class="ring-dot" style="background: var(--warn)"></span>
+              <span class="ring-label" i18n="@@dashboard.rings.workouts">Workouts</span>
+              <span class="ring-value mono">{{ weeklyWorkoutCount() }} / 5</span>
+            </li>
+          </ul>
+        </div>
+      </ft-card>
+
+      <ft-card title="Recent workouts" i18n-title="@@dashboard.recent.title" [padded]="false">
+        <div card-actions>
+          <a class="link" routerLink="/workout/history" i18n="@@dashboard.recent.all">View all</a>
+        </div>
+        @if (recentWorkouts().length) {
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th i18n="@@table.date">Date</th>
+                <th i18n="@@table.exercises">Exercises</th>
+                <th i18n="@@table.volume">Volume</th>
+                <th i18n="@@table.duration">Duration</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (w of recentWorkouts(); track w.id) {
+                <tr>
+                  <td class="mono">{{ formatDate(w.workoutDate) }}</td>
+                  <td>{{ w.totalExercises }}</td>
+                  <td class="mono">{{ w.totalVolume | number: '1.0-0' }} kg</td>
+                  <td>
+                    <ft-tag tone="muted">{{ w.durationMinutes }} min</ft-tag>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <ft-empty-state
+            title="No workouts yet"
+            i18n-title="@@dashboard.recent.emptyTitle"
+            message="Start your first session to see it here."
+            i18n-message="@@dashboard.recent.emptyMessage"
+            icon="dumbbell"
+          >
+            <a ft-button variant="primary" routerLink="/workout/session" i18n="@@dashboard.recent.emptyCta">
+              Start workout
+            </a>
+          </ft-empty-state>
+        }
+      </ft-card>
+    </div>
+
+    <div class="stack-lg">
+      <ft-card title="Macros" i18n-title="@@dashboard.macros.title">
+        <div class="macros">
+          <div class="macro-row">
+            <div class="macro-header">
+              <span class="macro-label" i18n="@@macro.protein">Protein</span>
+              <span class="macro-value mono">{{ proteinLine().consumed }} / {{ proteinLine().target }} g</span>
+            </div>
+            <ft-progress-bar [value]="proteinPct()" tone="success" />
+          </div>
+          <div class="macro-row">
+            <div class="macro-header">
+              <span class="macro-label" i18n="@@macro.carbs">Carbs</span>
+              <span class="macro-value mono">{{ summary()?.consumedCarbs ?? 0 | number: '1.0-0' }} / {{ summary()?.targetCarbs ?? 0 | number: '1.0-0' }} g</span>
+            </div>
+            <ft-progress-bar [value]="carbsPct()" tone="warn" />
+          </div>
+          <div class="macro-row">
+            <div class="macro-header">
+              <span class="macro-label" i18n="@@macro.fat">Fat</span>
+              <span class="macro-value mono">{{ summary()?.consumedFat ?? 0 | number: '1.0-0' }} / {{ summary()?.targetFat ?? 0 | number: '1.0-0' }} g</span>
+            </div>
+            <ft-progress-bar [value]="fatPct()" tone="accent" />
+          </div>
+          <div class="macro-row">
+            <div class="macro-header">
+              <span class="macro-label" i18n="@@macro.calories">Calories</span>
+              <span class="macro-value mono">{{ caloriesLine().consumed }} / {{ caloriesLine().target }} kcal</span>
+            </div>
+            <ft-progress-bar [value]="caloriesPct()" tone="accent" />
+          </div>
+        </div>
+      </ft-card>
+
+      <ft-card title="Quick actions" i18n-title="@@dashboard.quick.title">
+        <div class="quick-list">
+          <a class="quick-item" routerLink="/workout/session">
+            <span class="quick-label" i18n="@@dashboard.quick.workout">Start workout</span>
+            <span class="quick-desc" i18n="@@dashboard.quick.workoutDesc">Log sets, reps and RPE.</span>
+          </a>
+          <a class="quick-item" routerLink="/nutrition/search">
+            <span class="quick-label" i18n="@@dashboard.quick.food">Log food</span>
+            <span class="quick-desc" i18n="@@dashboard.quick.foodDesc">Search and add to a meal.</span>
+          </a>
+          <a class="quick-item" routerLink="/analytics">
+            <span class="quick-label" i18n="@@dashboard.quick.progress">Open analytics</span>
+            <span class="quick-desc" i18n="@@dashboard.quick.progressDesc">Streaks, PRs, body metrics.</span>
+          </a>
+        </div>
+      </ft-card>
+    </div>
+  </div>
+</div>

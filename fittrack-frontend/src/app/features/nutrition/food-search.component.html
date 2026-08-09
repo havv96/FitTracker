@@ -1,176 +1,184 @@
+<div class="food-search">
+  <div class="header">
+    <button ft-button size="sm" (click)="goBack()">
+      <ft-icon name="arrow-left" [size]="14" />
+      <span i18n="@@common.back">Back</span>
+    </button>
+    <div class="header-title" i18n="@@foodSearch.title">Search food</div>
+    @if (targetMealType) {
+      <ft-tag>{{ mealLabels[targetMealType] }}</ft-tag>
+    }
+  </div>
 
-    <div class="food-search-container">
-      <!-- Header -->
-      <div class="header">
-        <button (click)="goBack()" class="btn-back">← Back</button>
-        <h2>Search Food</h2>
-      </div>
-
-      <!-- Search Box -->
-      <div class="search-section">
+  <ft-card [padded]="false">
+    <div class="filter-bar">
+      <div class="search-slot">
+        <ft-icon name="search" [size]="14" />
         <input
-          type="text"
+          class="search-input"
+          type="search"
           [(ngModel)]="searchTerm"
           (ngModelChange)="onSearchChange()"
-          placeholder="Search food items..."
-          class="search-input"
+          i18n-placeholder="@@foodSearch.placeholder"
+          placeholder="Search foods, brands, categories…"
         />
+      </div>
 
-        <div class="filters">
-          <select [(ngModel)]="selectedCategory" (ngModelChange)="onFilterChange()" class="filter-select">
-            <option [ngValue]="null">All Categories</option>
-            <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
-          </select>
-
-          <button (click)="clearFilters()" *ngIf="hasFilters()" class="btn-secondary">
-            Clear
+      <div class="chip-row">
+        <button ft-chip [active]="!selectedCategory()" (click)="toggleCategory(null)" i18n="@@filter.allCategories">
+          All categories
+        </button>
+        @for (c of categories; track c) {
+          <button ft-chip [active]="selectedCategory() === c" (click)="toggleCategory(c)">
+            {{ c }}
           </button>
-        </div>
+        }
       </div>
 
-      <!-- Loading -->
-      <div *ngIf="loading()" class="loading">
-        <p>Searching...</p>
+      @if (hasFilters()) {
+        <button ft-button size="sm" (click)="clearFilters()" i18n="@@exerciseList.clear">
+          Clear filters
+        </button>
+      }
+    </div>
+  </ft-card>
+
+  @if (loading()) {
+    <ft-card>
+      <div class="loading mono" i18n="@@nutrition.loading">Loading…</div>
+    </ft-card>
+  } @else if (error()) {
+    <ft-card>
+      <div class="error-block">
+        <div class="error-msg">{{ error() }}</div>
+        <button ft-button variant="primary" (click)="searchFood()" i18n="@@common.retry">Retry</button>
       </div>
-
-      <!-- Error -->
-      <div *ngIf="error()" class="error">
-        <p>{{ error() }}</p>
-      </div>
-
-      <!-- Results -->
-      <div *ngIf="!loading() && !error()" class="results-section">
-        <div class="results-count">
-          {{ totalResults() }} food items found
-        </div>
-
-        <div class="food-grid">
-          <div
-            *ngFor="let food of foods()"
-            class="food-card"
-            (click)="selectFood(food)"
-            [class.selected]="selectedFood()?.id === food.id"
-          >
-            <div class="food-header">
-              <h3>{{ food.name }}</h3>
-              <span *ngIf="food.brand" class="brand">{{ food.brand }}</span>
-              <span class="badge" [class]="'category-' + food.category">{{ food.category }}</span>
-            </div>
-            <div class="food-details">
-              <div class="serving">{{ food.servingSize }} {{ food.servingUnit }}</div>
-              <div class="macros-row">
-                <span class="macro calories-badge">{{ food.calories }} cal</span>
-                <span class="macro">P: {{ food.proteinG }}g</span>
-                <span class="macro">C: {{ food.carbsG }}g</span>
-                <span class="macro">F: {{ food.fatG }}g</span>
-              </div>
-            </div>
+    </ft-card>
+  } @else if (foods().length === 0) {
+    <ft-card>
+      <ft-empty-state
+        title="No matches"
+        i18n-title="@@foodSearch.emptyTitle"
+        message="Try a different search or clear filters."
+        i18n-message="@@foodSearch.emptyMessage"
+        icon="search"
+      >
+        <button ft-button variant="primary" (click)="clearFilters()" i18n="@@exerciseList.clear">
+          Clear filters
+        </button>
+      </ft-empty-state>
+    </ft-card>
+  } @else {
+    <div class="food-grid">
+      @for (food of foods(); track food.id) {
+        <button class="food-card" type="button" (click)="selectFood(food)">
+          <div class="food-header">
+            <div class="food-name">{{ food.name }}</div>
+            @if (food.brand) {
+              <div class="food-brand mono">{{ food.brand }}</div>
+            }
           </div>
-
-          <div *ngIf="foods().length === 0 && !loading()" class="no-results">
-            <p>No food items found.</p>
+          <div class="food-tags">
+            <ft-tag>{{ food.category }}</ft-tag>
+            <span class="food-serving mono">{{ food.servingSize }} {{ food.servingUnit }}</span>
           </div>
-        </div>
+          <div class="food-macros mono">
+            <div class="cal-tag">{{ food.calories }} kcal</div>
+            <span>P {{ food.proteinG | number: '1.0-1' }}</span>
+            <span>C {{ food.carbsG | number: '1.0-1' }}</span>
+            <span>F {{ food.fatG | number: '1.0-1' }}</span>
+          </div>
+        </button>
+      }
+    </div>
 
-        <!-- Pagination -->
-        <div *ngIf="totalPages() > 1" class="pagination">
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button
+          ft-button
+          size="sm"
+          (click)="previousPage()"
+          [attr.disabled]="currentPage() === 0 ? true : null"
+        >
+          <ft-icon name="chevron-left" [size]="14" />
+          <span i18n="@@pagination.prev">Prev</span>
+        </button>
+        <span class="page-info mono">
+          <ng-container i18n="@@pagination.pageOf">Page</ng-container>
+          {{ currentPage() + 1 }} / {{ totalPages() }} · {{ totalResults() }}
+          <ng-container i18n="@@pagination.resultsSuffix">results</ng-container>
+        </span>
+        <button
+          ft-button
+          size="sm"
+          (click)="nextPage()"
+          [attr.disabled]="currentPage() >= totalPages() - 1 ? true : null"
+        >
+          <span i18n="@@pagination.next">Next</span>
+          <ft-icon name="chevron-right" [size]="14" />
+        </button>
+      </div>
+    }
+  }
+
+  @if (showLogForm() && selectedFood(); as food) {
+    <div class="log-overlay" (click)="closeLogForm()">
+      <div class="log-panel" (click)="$event.stopPropagation()">
+        <header class="log-header">
+          <div>
+            <div class="log-eyebrow" i18n="@@foodSearch.logEyebrow">Log this food</div>
+            <div class="log-title">{{ food.name }}</div>
+            @if (food.brand) {
+              <div class="log-brand mono">{{ food.brand }} · {{ food.servingSize }} {{ food.servingUnit }}</div>
+            }
+          </div>
           <button
-            (click)="previousPage()"
-            [disabled]="currentPage() === 0"
-            class="btn-secondary"
+            ft-button
+            size="sm"
+            (click)="closeLogForm()"
+            i18n-aria-label="@@common.close"
+            aria-label="Close"
           >
-            Previous
+            <ft-icon name="x" [size]="14" />
           </button>
-          <span class="page-info">
-            Page {{ currentPage() + 1 }} of {{ totalPages() }}
-          </span>
-          <button
-            (click)="nextPage()"
-            [disabled]="currentPage() >= totalPages() - 1"
-            class="btn-secondary"
-          >
-            Next
-          </button>
-        </div>
-      </div>
+        </header>
 
-      <!-- Selected Food Details Modal -->
-      <div *ngIf="selectedFood() && showLogForm()" class="modal-overlay" (click)="closeLogForm()">
-        <div class="modal-content" (click)="$event.stopPropagation()">
-          <div class="modal-header">
-            <h3>Log Food</h3>
-            <button (click)="closeLogForm()" class="btn-close">×</button>
-          </div>
+        <form [formGroup]="logForm" (ngSubmit)="logFood()" class="log-form">
+          <ft-form-field label="Meal" i18n-label="@@foodSearch.mealField">
+            <select formControlName="mealType">
+              @for (m of mealTypes; track m) {
+                <option [ngValue]="m">{{ mealLabels[m] }}</option>
+              }
+            </select>
+          </ft-form-field>
+          <ft-form-field label="Servings" i18n-label="@@foodSearch.servings">
+            <input type="number" formControlName="servings" min="0.1" step="0.1" />
+          </ft-form-field>
 
-          <div class="modal-body">
-            <div class="food-info-section">
-              <h4>{{ selectedFood()!.name }}</h4>
-              <p *ngIf="selectedFood()!.brand" class="brand-name">{{ selectedFood()!.brand }}</p>
-              <p class="serving-info">{{ selectedFood()!.servingSize }} {{ selectedFood()!.servingUnit }}</p>
+          <div class="log-preview">
+            <div class="preview-eyebrow" i18n="@@foodSearch.previewEyebrow">Preview</div>
+            <div class="preview-row">
+              <ft-tag>{{ calculateTotalCalories() }} kcal</ft-tag>
+              <span class="mono">P {{ calculateTotalMacro('proteinG') }}g</span>
+              <span class="mono">C {{ calculateTotalMacro('carbsG') }}g</span>
+              <span class="mono">F {{ calculateTotalMacro('fatG') }}g</span>
             </div>
-
-            <form [formGroup]="logForm" (ngSubmit)="logFood()">
-              <div class="form-group">
-                <label>Meal Type</label>
-                <select formControlName="mealType" class="form-input">
-                  <option *ngFor="let meal of mealTypes" [value]="meal">{{ meal }}</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Servings</label>
-                <input
-                  type="number"
-                  formControlName="servings"
-                  class="form-input"
-                  min="0.1"
-                  step="0.5"
-                />
-                <div *ngIf="logForm.get('servings')?.invalid && logForm.get('servings')?.touched" class="error-text">
-                  Servings must be positive
-                </div>
-              </div>
-
-              <div class="nutrition-preview">
-                <h5>Nutrition ({{ logForm.value.servings }} servings):</h5>
-                <div class="preview-grid">
-                  <div class="preview-item">
-                    <span class="label">Calories:</span>
-                    <span class="value">{{ calculateTotalCalories() }}</span>
-                  </div>
-                  <div class="preview-item">
-                    <span class="label">Protein:</span>
-                    <span class="value">{{ calculateTotalMacro('proteinG') }}g</span>
-                  </div>
-                  <div class="preview-item">
-                    <span class="label">Carbs:</span>
-                    <span class="value">{{ calculateTotalMacro('carbsG') }}g</span>
-                  </div>
-                  <div class="preview-item">
-                    <span class="label">Fat:</span>
-                    <span class="value">{{ calculateTotalMacro('fatG') }}g</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-actions">
-                <button
-                  type="submit"
-                  [disabled]="logForm.invalid || logging()"
-                  class="btn-primary btn-block"
-                >
-                  {{ logging() ? 'Logging...' : 'Log Food' }}
-                </button>
-                <button
-                  type="button"
-                  (click)="closeLogForm()"
-                  class="btn-secondary btn-block"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
+
+          <button
+            ft-button
+            variant="primary"
+            type="submit"
+            [attr.disabled]="logForm.invalid || logging() ? true : null"
+          >
+            @if (logging()) {
+              <ng-container i18n="@@foodSearch.logging">Saving…</ng-container>
+            } @else {
+              <ng-container i18n="@@foodSearch.log">Log food</ng-container>
+            }
+          </button>
+        </form>
       </div>
     </div>
+  }
+</div>

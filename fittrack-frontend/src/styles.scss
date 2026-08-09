@@ -1,1 +1,7 @@
-/* You can add global styles to this file, and also import other style files */
+// Global stylesheet — thin entry point that pulls in tokens, reset, and utilities.
+// Font faces come from @fontsource CSS files registered in angular.json's `styles` array
+// so both Latin and Cyrillic subsets are bundled and served same-origin (CSP-safe).
+
+@use 'styles/tokens';
+@use 'styles/reset';
+@use 'styles/utilities';

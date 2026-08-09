@@ -1,22 +1,56 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { WorkoutService } from '../../core/services/workout.service';
-import { ToastService } from '../../shared/components/toast/toast.service';
-import { ConfirmDialogService } from '../../shared/components/confirm-dialog/confirm-dialog.service';
+import {
+  Component,
+  OnDestroy,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import {
   Exercise,
   WorkoutSetRequest,
   WorkoutSetResponse,
-  WorkoutResponse
 } from '../../core/models/workout.model';
+import { WorkoutService } from '../../core/services/workout.service';
+import { ConfirmDialogService } from '../../shared/components/confirm-dialog/confirm-dialog.service';
+import { ToastService } from '../../shared/components/toast/toast.service';
+import { FtButtonComponent } from '../../shared/ui/ft-button.component';
+import { FtCardComponent } from '../../shared/ui/ft-card.component';
+import { FtEmptyStateComponent } from '../../shared/ui/ft-empty-state.component';
+import { FtFormFieldComponent } from '../../shared/ui/ft-form-field.component';
+import { FtIconComponent } from '../../shared/ui/ft-icon.component';
+import { FtProgressBarComponent } from '../../shared/ui/ft-progress-bar.component';
+import { FtStatCardComponent } from '../../shared/ui/ft-stat-card.component';
+import { FtTagComponent } from '../../shared/ui/ft-tag.component';
+
+const REST_DEFAULT = 90;
 
 @Component({
   selector: 'app-workout-session',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    FtButtonComponent,
+    FtCardComponent,
+    FtEmptyStateComponent,
+    FtFormFieldComponent,
+    FtIconComponent,
+    FtProgressBarComponent,
+    FtStatCardComponent,
+    FtTagComponent,
+  ],
   templateUrl: './workout-session.component.html',
-  styleUrls: ['./workout-session.component.scss']
+  styleUrls: ['./workout-session.component.scss'],
 })
 export class WorkoutSessionComponent implements OnInit, OnDestroy {
   private workoutService = inject(WorkoutService);
@@ -24,119 +58,116 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy {
   private toast = inject(ToastService);
   private confirmDialog = inject(ConfirmDialogService);
 
-  // Workout state
-  currentWorkout = this.workoutService.currentWorkout;
-  currentSets = this.workoutService.currentWorkoutSets;
-  exercises = signal<Exercise[]>([]);
+  readonly currentWorkout = this.workoutService.currentWorkout;
+  readonly currentSets = this.workoutService.currentWorkoutSets;
+  readonly exercises = signal<Exercise[]>([]);
   selectedExerciseId: number | null = null;
-  selectedExercise = signal<Exercise | null>(null);
-  previousSets = signal<WorkoutSetResponse[]>([]);
+  readonly selectedExercise = signal<Exercise | null>(null);
+  readonly previousSets = signal<WorkoutSetResponse[]>([]);
 
-  // Form
   setForm: FormGroup;
-  loggingSet = signal<boolean>(false);
-  finishingWorkout = signal<boolean>(false);
-  error = signal<string | null>(null);
+  readonly loggingSet = signal<boolean>(false);
+  readonly finishingWorkout = signal<boolean>(false);
+  readonly error = signal<string | null>(null);
+  readonly starting = signal<boolean>(false);
 
-  // Rest timer
-  restTimerActive = signal<boolean>(false);
-  restTimerPaused = signal<boolean>(false);
-  restTimeRemaining = signal<number>(90); // 90 seconds default
+  readonly restTimerActive = signal<boolean>(false);
+  readonly restTimerPaused = signal<boolean>(false);
+  readonly restTimeRemaining = signal<number>(REST_DEFAULT);
   private restTimerInterval: ReturnType<typeof setInterval> | null = null;
-  private workoutStartTime: Date | null = null;
+  private tickInterval: ReturnType<typeof setInterval> | null = null;
+  private readonly nowMs = signal<number>(Date.now());
 
-  // Computed
-  workoutTitle = computed(() => {
-    const workout = this.currentWorkout();
-    return workout ? `Active Workout - ${workout.workoutDate}` : 'Workout Session';
+  readonly restProgressPct = computed(() =>
+    ((REST_DEFAULT - this.restTimeRemaining()) / REST_DEFAULT) * 100,
+  );
+
+  readonly totalVolume = computed(() =>
+    Math.round(this.workoutService.getCurrentWorkoutTotalVolume()),
+  );
+  readonly totalSets = computed(() => this.workoutService.getCurrentWorkoutTotalSets());
+  readonly uniqueExercises = computed(() => this.workoutService.getUniqueExercisesCount());
+
+  readonly workoutStartMs = computed(() => {
+    const w = this.currentWorkout();
+    return w?.startTime ? new Date(w.startTime).getTime() : null;
   });
 
-  totalVolume = computed(() => {
-    return Math.round(this.workoutService.getCurrentWorkoutTotalVolume());
+  readonly durationLabel = computed(() => {
+    const start = this.workoutStartMs();
+    if (!start) return '0:00';
+    const seconds = Math.max(0, Math.floor((this.nowMs() - start) / 1000));
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   });
 
-  totalSets = computed(() => {
-    return this.workoutService.getCurrentWorkoutTotalSets();
+  readonly currentExerciseSets = computed(() => {
+    const eid = this.selectedExerciseId;
+    if (!eid) return [] as WorkoutSetResponse[];
+    return this.currentSets().filter((s) => s.exerciseId === eid);
   });
 
-  uniqueExercises = computed(() => {
-    return this.workoutService.getUniqueExercisesCount();
-  });
-
-  workoutDuration = computed(() => {
-    if (!this.workoutStartTime) return '0m';
-    const now = new Date();
-    const diffMs = now.getTime() - this.workoutStartTime.getTime();
-    const minutes = Math.floor(diffMs / 60000);
-    return `${minutes}m`;
-  });
+  readonly nextSetNumber = computed(() => this.currentExerciseSets().length + 1);
 
   constructor() {
     this.setForm = this.fb.group({
       reps: [10, [Validators.required, Validators.min(1), Validators.max(1000)]],
       weight: [0, [Validators.required, Validators.min(0)]],
-      rpe: [null]
+      rpe: [null],
     });
   }
 
   ngOnInit(): void {
     this.loadExercises();
-
-    // If there's already an active workout, set the start time
-    if (this.currentWorkout()) {
-      this.workoutStartTime = new Date(this.currentWorkout()!.startTime);
-    }
+    this.tickInterval = setInterval(() => this.nowMs.set(Date.now()), 1000);
   }
 
   ngOnDestroy(): void {
     this.stopRestTimer();
+    if (this.tickInterval) clearInterval(this.tickInterval);
   }
 
   loadExercises(): void {
     this.workoutService.getAllExercises().subscribe({
-      next: (exercises) => {
-        this.exercises.set(exercises);
-      },
+      next: (exercises) => this.exercises.set(exercises),
       error: (err) => {
-        this.error.set('Failed to load exercises');
+        this.error.set($localize`:@@workout.errorLoadExercises:Could not load exercises.`);
         console.error('Error loading exercises:', err);
-      }
+      },
     });
   }
 
   startWorkout(): void {
     const today = new Date().toISOString().split('T')[0];
-
+    this.starting.set(true);
     this.workoutService.startWorkout({ date: today }).subscribe({
-      next: () => {
-        this.workoutStartTime = new Date();
-      },
+      next: () => this.starting.set(false),
       error: (err) => {
-        this.error.set('Failed to start workout');
+        this.starting.set(false);
+        this.error.set($localize`:@@workout.errorStart:Could not start workout.`);
         console.error('Error starting workout:', err);
-      }
+      },
     });
   }
 
   onExerciseChange(): void {
     if (this.selectedExerciseId) {
-      const exercise = this.exercises().find(e => e.id === this.selectedExerciseId);
-      this.selectedExercise.set(exercise || null);
+      const exercise = this.exercises().find((e) => e.id === this.selectedExerciseId) ?? null;
+      this.selectedExercise.set(exercise);
 
-      // Load previous workout data
       if (exercise && this.currentWorkout()) {
-        this.workoutService.getPreviousWorkoutData(
-          this.currentWorkout()!.id,
-          exercise.id
-        ).subscribe({
-          next: (sets) => {
-            this.previousSets.set(sets.slice(0, 5)); // Show last 5 sets
-          },
-          error: (err) => {
-            console.error('Error loading previous data:', err);
-            this.previousSets.set([]);
-          }
-        });
+        this.workoutService
+          .getPreviousWorkoutData(this.currentWorkout()!.id, exercise.id)
+          .subscribe({
+            next: (sets) => this.previousSets.set(sets.slice(0, 5)),
+            error: (err) => {
+              console.error('Error loading previous data:', err);
+              this.previousSets.set([]);
+            },
+          });
       }
     } else {
       this.selectedExercise.set(null);
@@ -146,66 +177,57 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy {
 
   logSet(): void {
     if (this.setForm.invalid || !this.selectedExercise() || !this.currentWorkout()) {
+      this.setForm.markAllAsTouched();
       return;
     }
 
     this.loggingSet.set(true);
     this.error.set(null);
 
-    const nextSetNumber = this.currentSets().filter(
-      s => s.exerciseId === this.selectedExerciseId
-    ).length + 1;
-
     const request: WorkoutSetRequest = {
       exerciseId: this.selectedExerciseId!,
-      setNumber: nextSetNumber,
+      setNumber: this.nextSetNumber(),
       reps: this.setForm.value.reps,
       weightKg: this.setForm.value.weight,
-      rpe: this.setForm.value.rpe
+      rpe: this.setForm.value.rpe,
     };
 
     this.workoutService.logSet(this.currentWorkout()!.id, request).subscribe({
       next: () => {
         this.loggingSet.set(false);
-        // Reset form but keep exercise selected
-        this.setForm.patchValue({
-          reps: 10,
-          rpe: null
-        });
+        this.setForm.patchValue({ reps: 10, rpe: null });
         this.setForm.markAsUntouched();
+        this.startRestTimer();
       },
       error: (err) => {
-        this.error.set('Failed to log set');
+        this.error.set($localize`:@@workout.errorLogSet:Could not log set.`);
         this.loggingSet.set(false);
         console.error('Error logging set:', err);
-      }
+      },
     });
   }
 
   startRestTimer(): void {
+    this.stopRestTimer();
     this.restTimerActive.set(true);
     this.restTimerPaused.set(false);
-    this.restTimeRemaining.set(90);
+    this.restTimeRemaining.set(REST_DEFAULT);
 
     this.restTimerInterval = setInterval(() => {
       if (!this.restTimerPaused()) {
-        this.restTimeRemaining.update(time => {
-          if (time <= 1) {
+        this.restTimeRemaining.update((t) => {
+          if (t <= 1) {
             this.stopRestTimer();
             return 0;
           }
-          return time - 1;
+          return t - 1;
         });
       }
     }, 1000);
   }
 
-  pauseRestTimer(): void {
-    this.restTimerPaused.set(true);
-  }
-
-  resumeRestTimer(): void {
-    this.restTimerPaused.set(false);
+  togglePause(): void {
+    this.restTimerPaused.update((p) => !p);
   }
 
   stopRestTimer(): void {
@@ -225,35 +247,32 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy {
 
   async confirmFinishWorkout(): Promise<void> {
     const confirmed = await this.confirmDialog.confirm({
-      title: 'Finish workout?',
-      message: 'Are you sure you want to finish this workout?',
-      confirmText: 'Finish'
+      title: $localize`:@@workout.finishTitle:Finish workout?`,
+      message: $localize`:@@workout.finishMessage:This will end the current session and archive all logged sets.`,
+      confirmText: $localize`:@@workout.finishConfirm:Finish`,
     });
-    if (confirmed) {
-      this.finishWorkout();
-    }
+    if (confirmed) this.finishWorkout();
   }
 
   finishWorkout(): void {
     if (!this.currentWorkout()) return;
-
     this.finishingWorkout.set(true);
     this.error.set(null);
 
     this.workoutService.finishWorkout(this.currentWorkout()!.id).subscribe({
       next: () => {
         this.finishingWorkout.set(false);
-        this.workoutStartTime = null;
         this.selectedExerciseId = null;
         this.selectedExercise.set(null);
         this.previousSets.set([]);
-        this.toast.success('Workout completed successfully!');
+        this.stopRestTimer();
+        this.toast.success($localize`:@@workout.finishedToast:Workout completed.`);
       },
       error: (err) => {
-        this.error.set('Failed to finish workout');
+        this.error.set($localize`:@@workout.errorFinish:Could not finish workout.`);
         this.finishingWorkout.set(false);
         console.error('Error finishing workout:', err);
-      }
+      },
     });
   }
 }

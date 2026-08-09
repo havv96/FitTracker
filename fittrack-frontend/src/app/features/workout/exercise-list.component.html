@@ -1,106 +1,151 @@
-    <div class="exercise-list-container">
-      <div class="header">
-        <h2>Exercise Library</h2>
-        <p class="subtitle">Browse and search exercises for your workout</p>
+<div class="exercise-list">
+  <ft-card [padded]="false">
+    <header class="filter-bar">
+      <div class="search-slot">
+        <ft-icon name="search" [size]="14" />
+        <input
+          class="search-input"
+          type="search"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+          i18n-placeholder="@@exerciseList.searchPlaceholder"
+          placeholder="Search exercises…"
+        />
       </div>
 
-      <!-- Search and Filters -->
-      <div class="filters">
-        <div class="search-box">
-          <input
-            type="text"
-            [(ngModel)]="searchTerm"
-            (ngModelChange)="onSearchChange()"
-            placeholder="Search exercises..."
-            class="search-input"
-          />
-        </div>
-
-        <div class="filter-row">
-          <select [(ngModel)]="selectedMuscleGroup" (ngModelChange)="onFilterChange()" class="filter-select">
-            <option [ngValue]="null">All Muscle Groups</option>
-            <option *ngFor="let group of muscleGroups" [value]="group">{{ group }}</option>
-          </select>
-
-          <select [(ngModel)]="selectedEquipment" (ngModelChange)="onFilterChange()" class="filter-select">
-            <option [ngValue]="null">All Equipment</option>
-            <option *ngFor="let equipment of equipmentTypes" [value]="equipment">{{ equipment }}</option>
-          </select>
-
-          <button (click)="clearFilters()" class="btn-secondary" *ngIf="hasFilters()">
-            Clear Filters
-          </button>
-        </div>
-      </div>
-
-      <!-- Loading State -->
-      <div *ngIf="loading()" class="loading">
-        <p>Loading exercises...</p>
-      </div>
-
-      <!-- Error State -->
-      <div *ngIf="error()" class="error">
-        <p>{{ error() }}</p>
-        <button (click)="loadExercises()" class="btn-primary">Retry</button>
-      </div>
-
-      <!-- Exercise Grid -->
-      <div *ngIf="!loading() && !error()" class="exercise-grid">
-        <div
-          *ngFor="let exercise of exercises()"
-          class="exercise-card"
-          (click)="selectExercise(exercise)"
-          [class.selected]="selectedExercise()?.id === exercise.id"
-        >
-          <div class="exercise-header">
-            <h3>{{ exercise.name }}</h3>
-            <span class="badge muscle-group">{{ exercise.muscleGroup }}</span>
-          </div>
-          <div class="exercise-details">
-            <span class="badge equipment">{{ exercise.equipmentType }}</span>
-            <p *ngIf="exercise.description" class="description">{{ exercise.description }}</p>
-          </div>
-        </div>
-
-        <div *ngIf="exercises().length === 0" class="no-results">
-          <p>No exercises found matching your criteria.</p>
-          <button (click)="clearFilters()" class="btn-secondary">Clear Filters</button>
-        </div>
-      </div>
-
-      <!-- Pagination -->
-      <div *ngIf="totalPages() > 1" class="pagination">
-        <button
-          (click)="previousPage()"
-          [disabled]="currentPage() === 0"
-          class="btn-secondary"
-        >
-          Previous
+      <div class="chip-row">
+        <button ft-chip [active]="!selectedMuscleGroup()" (click)="toggleMuscle(null)" i18n="@@filter.allMuscles">
+          All muscles
         </button>
-        <span class="page-info">
-          Page {{ currentPage() + 1 }} of {{ totalPages() }}
+        @for (m of muscleGroups; track m) {
+          <button ft-chip [active]="selectedMuscleGroup() === m" (click)="toggleMuscle(m)">
+            {{ m }}
+          </button>
+        }
+      </div>
+
+      <div class="chip-row">
+        <button ft-chip [active]="!selectedEquipment()" (click)="toggleEquipment(null)" i18n="@@filter.allEquipment">
+          All equipment
+        </button>
+        @for (e of equipmentTypes; track e) {
+          <button ft-chip [active]="selectedEquipment() === e" (click)="toggleEquipment(e)">
+            {{ e }}
+          </button>
+        }
+      </div>
+
+      @if (hasFilters()) {
+        <button ft-button size="sm" (click)="clearFilters()" i18n="@@exerciseList.clear">
+          Clear filters
+        </button>
+      }
+    </header>
+  </ft-card>
+
+  @if (loading()) {
+    <ft-card>
+      <div class="loading mono" i18n="@@exerciseList.loading">Loading exercises…</div>
+    </ft-card>
+  } @else if (error()) {
+    <ft-card>
+      <div class="error-block">
+        <div class="error-msg">{{ error() }}</div>
+        <button ft-button variant="primary" (click)="loadExercises()" i18n="@@common.retry">Retry</button>
+      </div>
+    </ft-card>
+  } @else if (exercises().length === 0) {
+    <ft-card>
+      <ft-empty-state
+        title="No exercises match"
+        i18n-title="@@exerciseList.emptyTitle"
+        message="Try clearing filters or a different search term."
+        i18n-message="@@exerciseList.emptyMessage"
+        icon="list"
+      >
+        <button ft-button variant="primary" (click)="clearFilters()" i18n="@@exerciseList.clear">
+          Clear filters
+        </button>
+      </ft-empty-state>
+    </ft-card>
+  } @else {
+    <div class="ex-grid">
+      @for (ex of exercises(); track ex.id) {
+        <button
+          class="ex-card"
+          [class.selected]="selectedExercise()?.id === ex.id"
+          type="button"
+          (click)="selectExercise(ex)"
+        >
+          <div class="ex-name">{{ ex.name }}</div>
+          <div class="ex-meta">
+            <ft-tag>{{ ex.muscleGroup }}</ft-tag>
+            <ft-tag tone="muted">{{ ex.equipmentType }}</ft-tag>
+          </div>
+          @if (ex.description) {
+            <p class="ex-desc">{{ ex.description }}</p>
+          }
+        </button>
+      }
+    </div>
+
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button
+          ft-button
+          size="sm"
+          (click)="previousPage()"
+          [attr.disabled]="currentPage() === 0 ? true : null"
+        >
+          <ft-icon name="chevron-left" [size]="14" />
+          <span i18n="@@pagination.prev">Prev</span>
+        </button>
+        <span class="page-info mono">
+          <ng-container i18n="@@pagination.pageOf">Page</ng-container>
+          {{ currentPage() + 1 }} / {{ totalPages() }}
         </span>
         <button
+          ft-button
+          size="sm"
           (click)="nextPage()"
-          [disabled]="currentPage() >= totalPages() - 1"
-          class="btn-secondary"
+          [attr.disabled]="currentPage() >= totalPages() - 1 ? true : null"
         >
-          Next
+          <span i18n="@@pagination.next">Next</span>
+          <ft-icon name="chevron-right" [size]="14" />
         </button>
       </div>
+    }
+  }
 
-      <!-- Selected Exercise Details -->
-      <div *ngIf="selectedExercise()" class="selected-details">
-        <h3>{{ selectedExercise()!.name }}</h3>
-        <div class="details-content">
-          <p><strong>Muscle Group:</strong> {{ selectedExercise()!.muscleGroup }}</p>
-          <p><strong>Equipment:</strong> {{ selectedExercise()!.equipmentType }}</p>
-          <p *ngIf="selectedExercise()!.description">
-            <strong>Description:</strong> {{ selectedExercise()!.description }}
+  @if (selectedExercise(); as ex) {
+    <div class="detail-overlay" (click)="closeDetails()">
+      <div class="detail-panel" (click)="$event.stopPropagation()">
+        <header class="detail-header">
+          <div>
+            <div class="detail-title">{{ ex.name }}</div>
+            <div class="detail-meta">
+              <ft-tag>{{ ex.muscleGroup }}</ft-tag>
+              <ft-tag tone="muted">{{ ex.equipmentType }}</ft-tag>
+            </div>
+          </div>
+          <button
+            ft-button
+            size="sm"
+            (click)="closeDetails()"
+            i18n-aria-label="@@common.close"
+            aria-label="Close"
+          >
+            <ft-icon name="x" [size]="14" />
+          </button>
+        </header>
+        @if (ex.description) {
+          <p class="detail-desc">{{ ex.description }}</p>
+        } @else {
+          <p class="detail-desc muted" i18n="@@exerciseList.noDescription">
+            No description available for this exercise.
           </p>
-        </div>
-        <div class="actions">
-          <button (click)="closeDetails()" class="btn-secondary">Close</button>
-        </div>
+        }
       </div>
     </div>
+  }
+</div>
