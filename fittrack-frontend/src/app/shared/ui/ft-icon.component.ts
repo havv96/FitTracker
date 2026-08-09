@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 
 export type IconName =
   | 'grid'
@@ -43,27 +44,39 @@ export type IconName =
  * Icon component. Renders one of a fixed set of inline SVGs using `currentColor`
  * so the parent's `color` controls the stroke. All icons drawn at 16x16 viewBox.
  */
+// Note: we render the full <svg> element via [innerHTML] on a <span> so the browser's
+// HTML parser places the SVG children (<path>, <rect>, ...) in the correct namespace.
+// Binding [innerHTML] directly on an <svg> element causes Angular's sanitizer to strip
+// the SVG child elements. bypassSecurityTrustHtml is safe here because the icon
+// strings are static constants, keyed by the strictly-typed IconName input.
 @Component({
   selector: 'ft-icon',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <svg
-      [attr.width]="size()"
-      [attr.height]="size()"
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      [innerHTML]="body()"
-    ></svg>
-  `,
-  styles: [`:host { display: inline-flex; line-height: 0; }`],
+  template: `<span class="ft-icon-inner" [innerHTML]="html()"></span>`,
+  styles: [
+    `
+      :host,
+      .ft-icon-inner {
+        display: inline-flex;
+        line-height: 0;
+      }
+    `,
+  ],
 })
 export class FtIconComponent {
+  private readonly sanitizer = inject(DomSanitizer);
+
   readonly name = input.required<IconName>();
   readonly size = input<number>(16);
 
-  readonly body = computed(() => ICONS[this.name()] ?? ICONS['grid']);
+  readonly html = computed(() => {
+    const body = ICONS[this.name()] ?? ICONS['grid'];
+    const s = this.size();
+    return this.sanitizer.bypassSecurityTrustHtml(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 16 16" fill="none" aria-hidden="true">${body}</svg>`,
+    );
+  });
 }
 
 const S = 'stroke="currentColor"';
