@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
@@ -11,7 +11,7 @@ import { FtIconComponent } from '../../shared/ui/ft-icon.component';
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink, FtButtonComponent, FtFormFieldComponent, FtIconComponent],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss'],
+  styleUrls: ['./auth-card.scss'],
 })
 export class LoginComponent {
   private fb = inject(FormBuilder);

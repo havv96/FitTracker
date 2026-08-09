@@ -1,8 +1,8 @@
-import { AsyncPipe, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { NavigationEnd, Router, ActivatedRoute } from '@angular/router';
-import { filter, map, startWith } from 'rxjs/operators';
+import { NgIf } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map, startWith } from 'rxjs/operators';
 
 interface TitleContext {
   titleKey?: string;

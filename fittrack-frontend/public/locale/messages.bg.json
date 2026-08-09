@@ -38,6 +38,7 @@
 
   "auth.register.tagline": "Създай тренировъчен акаунт",
   "auth.register.emailLabel": "Имейл",
+  "auth.register.emailInvalid": "Въведи валиден имейл.",
   "auth.register.passwordLabel": "Парола",
   "auth.register.passwordHint": "Мин. 8 символа, 1 главна буква и 1 цифра.",
   "auth.register.passwordInvalid": "Паролата трябва да е 8+ символа с главна буква и цифра.",
