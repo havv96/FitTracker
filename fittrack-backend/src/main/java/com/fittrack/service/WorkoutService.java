@@ -11,8 +11,8 @@ import com.fittrack.model.WorkoutSet;
 import com.fittrack.repository.ExerciseRepository;
 import com.fittrack.repository.WorkoutRepository;
 import com.fittrack.repository.WorkoutSetRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,16 +27,12 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class WorkoutService {
 
-    @Autowired
-    private WorkoutRepository workoutRepository;
-
-    @Autowired
-    private WorkoutSetRepository setRepository;
-
-    @Autowired
-    private ExerciseRepository exerciseRepository;
+    private final WorkoutRepository workoutRepository;
+    private final WorkoutSetRepository setRepository;
+    private final ExerciseRepository exerciseRepository;
 
     @Transactional
     public WorkoutResponse startWorkout(Long userId, WorkoutStartRequest request) {

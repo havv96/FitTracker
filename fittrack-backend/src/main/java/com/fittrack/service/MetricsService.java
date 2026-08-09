@@ -6,8 +6,8 @@ import com.fittrack.dto.response.*;
 import com.fittrack.exception.ResourceNotFoundException;
 import com.fittrack.model.*;
 import com.fittrack.repository.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,31 +28,17 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class MetricsService {
 
-    @Autowired
-    private DailyStatsRepository statsRepository;
-
-    @Autowired
-    private UserProfileRepository profileRepository;
-
-    @Autowired
-    private WorkoutRepository workoutRepository;
-
-    @Autowired
-    private NutritionLogRepository nutritionLogRepository;
-
-    @Autowired
-    private BodyMetricsRepository bodyMetricsRepository;
-
-    @Autowired
-    private WorkoutSetRepository workoutSetRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private NutritionCalculator nutritionCalculator;
+    private final DailyStatsRepository statsRepository;
+    private final UserProfileRepository profileRepository;
+    private final WorkoutRepository workoutRepository;
+    private final NutritionLogRepository nutritionLogRepository;
+    private final BodyMetricsRepository bodyMetricsRepository;
+    private final WorkoutSetRepository workoutSetRepository;
+    private final UserRepository userRepository;
+    private final NutritionCalculator nutritionCalculator;
 
     @Transactional
     public DailyStats addWater(Long userId, Integer milliliters) {

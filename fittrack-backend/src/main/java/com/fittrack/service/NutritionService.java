@@ -11,8 +11,8 @@ import com.fittrack.repository.DailyStatsRepository;
 import com.fittrack.repository.FoodItemRepository;
 import com.fittrack.repository.NutritionLogRepository;
 import com.fittrack.repository.UserProfileRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,22 +31,14 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class NutritionService {
 
-    @Autowired
-    private FoodItemRepository foodItemRepository;
-
-    @Autowired
-    private NutritionLogRepository nutritionLogRepository;
-
-    @Autowired
-    private UserProfileRepository profileRepository;
-
-    @Autowired
-    private DailyStatsRepository dailyStatsRepository;
-
-    @Autowired
-    private NutritionCalculator nutritionCalculator;
+    private final FoodItemRepository foodItemRepository;
+    private final NutritionLogRepository nutritionLogRepository;
+    private final UserProfileRepository profileRepository;
+    private final DailyStatsRepository dailyStatsRepository;
+    private final NutritionCalculator nutritionCalculator;
 
     @Transactional(readOnly = true)
     public Page<FoodItem> searchFoods(String searchTerm, Boolean verifiedOnly, Pageable pageable) {

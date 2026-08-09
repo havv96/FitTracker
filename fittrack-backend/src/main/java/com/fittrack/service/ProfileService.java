@@ -8,8 +8,8 @@ import com.fittrack.model.UserProfile;
 import com.fittrack.repository.DailyStatsRepository;
 import com.fittrack.repository.UserProfileRepository;
 import com.fittrack.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,19 +17,13 @@ import java.math.BigDecimal;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ProfileService {
 
-    @Autowired
-    private UserProfileRepository profileRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private DailyStatsRepository dailyStatsRepository;
-
-    @Autowired
-    private NutritionCalculator nutritionCalculator;
+    private final UserProfileRepository profileRepository;
+    private final UserRepository userRepository;
+    private final DailyStatsRepository dailyStatsRepository;
+    private final NutritionCalculator nutritionCalculator;
 
     @Transactional
     public ProfileResponse createOrUpdateProfile(Long userId, ProfileRequest request) {

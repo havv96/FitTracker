@@ -8,8 +8,8 @@ import com.fittrack.exception.UserAlreadyExistsException;
 import com.fittrack.model.User;
 import com.fittrack.repository.UserRepository;
 import com.fittrack.security.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,19 +22,13 @@ import java.time.LocalDateTime;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class AuthService {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private JwtTokenProvider tokenProvider;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider tokenProvider;
+    private final AuthenticationManager authenticationManager;
 
     /**
      * Register a new user

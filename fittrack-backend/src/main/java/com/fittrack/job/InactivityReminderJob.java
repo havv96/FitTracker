@@ -5,8 +5,8 @@ import com.fittrack.repository.InactiveUserProjection;
 import com.fittrack.repository.ReminderLogRepository;
 import com.fittrack.repository.UserRepository;
 import com.fittrack.service.EmailService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,20 +23,16 @@ import java.time.LocalDateTime;
  */
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class InactivityReminderJob {
 
     private static final int BATCH_SIZE = 100;
     /** Safety cap so a bug can't run the loop unbounded. 100 pages * 100 users = 10k reminders. */
     private static final int MAX_BATCHES = 100;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private ReminderLogRepository reminderLogRepository;
-
-    @Autowired
-    private EmailService emailService;
+    private final UserRepository userRepository;
+    private final ReminderLogRepository reminderLogRepository;
+    private final EmailService emailService;
 
     @Scheduled(cron = "0 0 10 * * *")
     public void checkInactiveUsers() {
