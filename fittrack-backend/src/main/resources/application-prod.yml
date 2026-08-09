@@ -10,4 +10,11 @@ logging:
 
 server:
   error:
+    include-message: never
+    include-binding-errors: never
     include-stacktrace: never
+
+management:
+  endpoint:
+    health:
+      show-details: never

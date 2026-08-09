@@ -1,18 +1,28 @@
 package com.fittrack.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.DecodingException;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.Set;
 
 @Component
 public class JwtTokenProvider {
+
+    private static final Set<String> KNOWN_DEFAULT_SECRETS = Set.of(
+            "default-secret-change-me-in-production",
+            "your-256-bit-secret-key-change-in-production"
+    );
+
+    private static final int MIN_KEY_BYTES = 32;
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -23,42 +33,61 @@ public class JwtTokenProvider {
     @Value("${jwt.refresh-token-expiration}")
     private long refreshTokenExpiration;
 
-    /**
-     * Generate JWT access token
-     */
+    private SecretKey signingKey;
+
+    @PostConstruct
+    void initSigningKey() {
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            throw new IllegalStateException("jwt.secret is not configured");
+        }
+        if (KNOWN_DEFAULT_SECRETS.contains(jwtSecret)) {
+            throw new IllegalStateException(
+                    "jwt.secret is set to a known default value; refuse to boot. " +
+                    "Set JWT_SECRET to a base64-encoded random value of at least 32 bytes.");
+        }
+        byte[] keyBytes;
+        try {
+            keyBytes = Decoders.BASE64.decode(jwtSecret);
+        } catch (DecodingException e) {
+            throw new IllegalStateException(
+                    "jwt.secret is not valid base64. " +
+                    "Generate one with: openssl rand -base64 32", e);
+        }
+        if (keyBytes.length < MIN_KEY_BYTES) {
+            throw new IllegalStateException(
+                    "jwt.secret decodes to " + keyBytes.length + " bytes; HS256 requires at least " +
+                    MIN_KEY_BYTES + " bytes.");
+        }
+        this.signingKey = Keys.hmacShaKeyFor(keyBytes);
+    }
+
     public String generateAccessToken(String email) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
 
         return Jwts.builder()
-                .setSubject(email)
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .subject(email)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(signingKey, Jwts.SIG.HS256)
                 .compact();
     }
 
-    /**
-     * Generate JWT refresh token
-     */
     public String generateRefreshToken(String email) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + refreshTokenExpiration);
 
         return Jwts.builder()
-                .setSubject(email)
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .subject(email)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(signingKey, Jwts.SIG.HS256)
                 .compact();
     }
 
-    /**
-     * Extract email from JWT token
-     */
     public String getEmailFromToken(String token) {
         Claims claims = Jwts.parser()
-                .verifyWith(getSigningKey())
+                .verifyWith(signingKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
@@ -66,26 +95,21 @@ public class JwtTokenProvider {
         return claims.getSubject();
     }
 
-    /**
-     * Validate JWT token
-     */
-    public boolean validateToken(String token) {
+    public TokenValidationResult validate(String token) {
         try {
             Jwts.parser()
-                    .verifyWith(getSigningKey())
+                    .verifyWith(signingKey)
                     .build()
                     .parseSignedClaims(token);
-            return true;
+            return TokenValidationResult.VALID;
+        } catch (ExpiredJwtException e) {
+            return TokenValidationResult.EXPIRED;
         } catch (Exception e) {
-            return false;
+            return TokenValidationResult.INVALID;
         }
     }
 
-    /**
-     * Get signing key from secret
-     */
-    private SecretKey getSigningKey() {
-        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
-        return Keys.hmacShaKeyFor(keyBytes);
+    public boolean validateToken(String token) {
+        return validate(token) == TokenValidationResult.VALID;
     }
 }

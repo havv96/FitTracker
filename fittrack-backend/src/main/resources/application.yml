@@ -30,9 +30,17 @@ spring:
     validate-on-migrate: true
 
 jwt:
-  secret: ${JWT_SECRET:default-secret-change-me-in-production}
+  # MUST be a base64-encoded random value of at least 32 bytes (256 bits) for HS256.
+  # Generate with: openssl rand -base64 32
+  # The default below (base64 of "change-me-please-32-bytes-secret") is DEV-ONLY.
+  # Boot will refuse if this is left blank or set to any known weak default.
+  secret: ${JWT_SECRET:Y2hhbmdlLW1lLXBsZWFzZS0zMi1ieXRlcy1zZWNyZXQ=}
   access-token-expiration: ${JWT_ACCESS_EXPIRATION:900000}
   refresh-token-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+cors:
+  # Comma-separated list of origins allowed for cross-origin requests.
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
 
 server:
   port: ${SERVER_PORT:8080}
