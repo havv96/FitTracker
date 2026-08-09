@@ -1,0 +1,148 @@
+
+    <div class="nutrition-log-container">
+      <!-- Header -->
+      <div class="header">
+        <h2>Nutrition Tracking</h2>
+        <div class="date-selector">
+          <button (click)="previousDay()" class="btn-icon">&larr;</button>
+          <input
+            type="date"
+            [(ngModel)]="selectedDate"
+            (ngModelChange)="onDateChange()"
+            class="date-input"
+          />
+          <button (click)="nextDay()" [disabled]="isToday()" class="btn-icon">&rarr;</button>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="loading()" class="loading">
+        <p>Loading nutrition data...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="error()" class="error-banner">
+        {{ error() }}
+        <button (click)="error.set(null)" class="btn-close">×</button>
+      </div>
+
+      <!-- Daily Summary -->
+      <div *ngIf="summary() && !loading()" class="daily-summary">
+        <!-- Calories Progress -->
+        <div class="calories-card">
+          <div class="calories-header">
+            <h3>Calories</h3>
+            <div class="calories-remaining" [class.over]="remainingCalories() < 0">
+              {{ Math.abs(remainingCalories()) }} {{ remainingCalories() >= 0 ? 'remaining' : 'over' }}
+            </div>
+          </div>
+          <div class="calories-circle">
+            <svg viewBox="0 0 36 36" class="circular-chart">
+              <path class="circle-bg"
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <path class="circle"
+                [attr.stroke-dasharray]="calorieProgress() + ', 100'"
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <text x="18" y="20.35" class="percentage">{{ calorieProgress() }}%</text>
+            </svg>
+          </div>
+          <div class="calories-values">
+            <span class="consumed">{{ summary()!.consumedCalories }}</span>
+            <span class="separator">/</span>
+            <span class="target">{{ summary()!.targetCalories }}</span>
+          </div>
+        </div>
+
+        <!-- Macros Progress -->
+        <div class="macros-section">
+          <h3>Macronutrients</h3>
+          <div class="macros-grid">
+            <div class="macro-card protein">
+              <div class="macro-header">
+                <span class="macro-name">Protein</span>
+                <span class="macro-value">{{ summary()!.consumedProtein }}g / {{ summary()!.targetProtein }}g</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="proteinProgress()"></div>
+              </div>
+              <div class="macro-percent">{{ proteinProgress() }}%</div>
+            </div>
+
+            <div class="macro-card carbs">
+              <div class="macro-header">
+                <span class="macro-name">Carbs</span>
+                <span class="macro-value">{{ summary()!.consumedCarbs }}g / {{ summary()!.targetCarbs }}g</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="carbsProgress()"></div>
+              </div>
+              <div class="macro-percent">{{ carbsProgress() }}%</div>
+            </div>
+
+            <div class="macro-card fat">
+              <div class="macro-header">
+                <span class="macro-name">Fat</span>
+                <span class="macro-value">{{ summary()!.consumedFat }}g / {{ summary()!.targetFat }}g</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="fatProgress()"></div>
+              </div>
+              <div class="macro-percent">{{ fatProgress() }}%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Meals -->
+        <div class="meals-section">
+          <div *ngFor="let mealType of mealTypes" class="meal-group">
+            <div class="meal-header">
+              <h4>{{ mealType }}</h4>
+              <button (click)="openAddFood(mealType)" class="btn-add">+ Add Food</button>
+            </div>
+
+            <div class="meal-entries">
+              <div
+                *ngFor="let log of getMealLogs(mealType)"
+                class="food-entry"
+              >
+                <div class="food-info">
+                  <span class="food-name">{{ log.foodName }}</span>
+                  <span class="food-serving">{{ log.servings }} serving(s)</span>
+                </div>
+                <div class="food-macros">
+                  <span class="calories">{{ log.totalCalories }} cal</span>
+                  <span class="macro">P: {{ log.totalProteinG }}g</span>
+                  <span class="macro">C: {{ log.totalCarbsG }}g</span>
+                  <span class="macro">F: {{ log.totalFatG }}g</span>
+                </div>
+                <div class="food-actions">
+                  <button (click)="editLog(log)" class="btn-icon-small">✏️</button>
+                  <button (click)="deleteLog(log.id)" class="btn-icon-small">🗑️</button>
+                </div>
+              </div>
+
+              <div *ngIf="getMealLogs(mealType).length === 0" class="no-entries">
+                No food logged for {{ mealType.toLowerCase() }}
+              </div>
+
+              <!-- Meal Total -->
+              <div *ngIf="getMealLogs(mealType).length > 0" class="meal-total">
+                <span class="total-label">{{ mealType }} Total:</span>
+                <span class="total-calories">{{ getMealTotal(mealType) }} cal</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Add Button -->
+        <button (click)="openFoodSearch()" class="btn-primary btn-large btn-fixed">
+          🔍 Search & Log Food
+        </button>
+      </div>
+    </div>

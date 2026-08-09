@@ -1,0 +1,183 @@
+
+    <div class="food-search-container">
+      <!-- Header -->
+      <div class="header">
+        <button (click)="goBack()" class="btn-back">← Back</button>
+        <h2>Search Food</h2>
+      </div>
+
+      <!-- Search Box -->
+      <div class="search-section">
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange($event)"
+          placeholder="Search food items..."
+          class="search-input"
+        />
+
+        <div class="filters">
+          <select [(ngModel)]="selectedCategory" (ngModelChange)="onFilterChange()" class="filter-select">
+            <option [ngValue]="null">All Categories</option>
+            <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+          </select>
+
+          <button (click)="clearFilters()" *ngIf="hasFilters()" class="btn-secondary">
+            Clear
+          </button>
+
+          <button (click)="showCustomFoodForm()" class="btn-primary">
+            + Create Custom Food
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="loading()" class="loading">
+        <p>Searching...</p>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="error()" class="error">
+        <p>{{ error() }}</p>
+      </div>
+
+      <!-- Results -->
+      <div *ngIf="!loading() && !error()" class="results-section">
+        <div class="results-count">
+          {{ totalResults() }} food items found
+        </div>
+
+        <div class="food-grid">
+          <div
+            *ngFor="let food of foods()"
+            class="food-card"
+            (click)="selectFood(food)"
+            [class.selected]="selectedFood()?.id === food.id"
+          >
+            <div class="food-header">
+              <h3>{{ food.name }}</h3>
+              <span *ngIf="food.brand" class="brand">{{ food.brand }}</span>
+              <span class="badge" [class]="'category-' + food.category">{{ food.category }}</span>
+            </div>
+            <div class="food-details">
+              <div class="serving">{{ food.servingSize }} {{ food.servingUnit }}</div>
+              <div class="macros-row">
+                <span class="macro calories-badge">{{ food.calories }} cal</span>
+                <span class="macro">P: {{ food.proteinG }}g</span>
+                <span class="macro">C: {{ food.carbsG }}g</span>
+                <span class="macro">F: {{ food.fatG }}g</span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="foods().length === 0 && !loading()" class="no-results">
+            <p>No food items found.</p>
+            <button (click)="showCustomFoodForm()" class="btn-primary">
+              Create Custom Food
+            </button>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div *ngIf="totalPages() > 1" class="pagination">
+          <button
+            (click)="previousPage()"
+            [disabled]="currentPage() === 0"
+            class="btn-secondary"
+          >
+            Previous
+          </button>
+          <span class="page-info">
+            Page {{ currentPage() + 1 }} of {{ totalPages() }}
+          </span>
+          <button
+            (click)="nextPage()"
+            [disabled]="currentPage() >= totalPages() - 1"
+            class="btn-secondary"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      <!-- Selected Food Details Modal -->
+      <div *ngIf="selectedFood() && showLogForm()" class="modal-overlay" (click)="closeLogForm()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Log Food</h3>
+            <button (click)="closeLogForm()" class="btn-close">×</button>
+          </div>
+
+          <div class="modal-body">
+            <div class="food-info-section">
+              <h4>{{ selectedFood()!.name }}</h4>
+              <p *ngIf="selectedFood()!.brand" class="brand-name">{{ selectedFood()!.brand }}</p>
+              <p class="serving-info">{{ selectedFood()!.servingSize }} {{ selectedFood()!.servingUnit }}</p>
+            </div>
+
+            <form [formGroup]="logForm" (ngSubmit)="logFood()">
+              <div class="form-group">
+                <label>Meal Type</label>
+                <select formControlName="mealType" class="form-input">
+                  <option *ngFor="let meal of mealTypes" [value]="meal">{{ meal }}</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Servings</label>
+                <input
+                  type="number"
+                  formControlName="servings"
+                  class="form-input"
+                  min="0.1"
+                  step="0.5"
+                />
+                <div *ngIf="logForm.get('servings')?.invalid && logForm.get('servings')?.touched" class="error-text">
+                  Servings must be positive
+                </div>
+              </div>
+
+              <div class="nutrition-preview">
+                <h5>Nutrition ({{ logForm.value.servings }} servings):</h5>
+                <div class="preview-grid">
+                  <div class="preview-item">
+                    <span class="label">Calories:</span>
+                    <span class="value">{{ calculateTotalCalories() }}</span>
+                  </div>
+                  <div class="preview-item">
+                    <span class="label">Protein:</span>
+                    <span class="value">{{ calculateTotalMacro('proteinG') }}g</span>
+                  </div>
+                  <div class="preview-item">
+                    <span class="label">Carbs:</span>
+                    <span class="value">{{ calculateTotalMacro('carbsG') }}g</span>
+                  </div>
+                  <div class="preview-item">
+                    <span class="label">Fat:</span>
+                    <span class="value">{{ calculateTotalMacro('fatG') }}g</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button
+                  type="submit"
+                  [disabled]="logForm.invalid || logging()"
+                  class="btn-primary btn-block"
+                >
+                  {{ logging() ? 'Logging...' : 'Log Food' }}
+                </button>
+                <button
+                  type="button"
+                  (click)="closeLogForm()"
+                  class="btn-secondary btn-block"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>

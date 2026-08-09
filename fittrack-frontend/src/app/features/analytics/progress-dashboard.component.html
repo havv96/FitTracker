@@ -1,0 +1,190 @@
+
+    <div class="progress-dashboard-container">
+      <!-- Header -->
+      <div class="header">
+        <h2>Progress & Analytics</h2>
+        <p class="subtitle">Track your fitness journey and achievements</p>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="loading()" class="loading">
+        <p>Loading your progress...</p>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="error()" class="error-banner">
+        {{ error() }}
+        <button (click)="error.set(null)" class="btn-close">×</button>
+      </div>
+
+      <!-- Summary Cards -->
+      <div *ngIf="!loading() && summary()" class="summary-section">
+        <div class="stat-card-grid">
+          <div class="stat-card primary">
+            <div class="stat-icon">🏋️</div>
+            <div class="stat-content">
+              <div class="stat-value">{{ summary()!.totalWorkouts }}</div>
+              <div class="stat-label">Total Workouts</div>
+            </div>
+          </div>
+
+          <div class="stat-card success">
+            <div class="stat-icon">💪</div>
+            <div class="stat-content">
+              <div class="stat-value">{{ formatVolume(summary()!.totalVolume) }}</div>
+              <div class="stat-label">Total Volume</div>
+            </div>
+          </div>
+
+          <div class="stat-card warning">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-content">
+              <div class="stat-value">{{ summary()!.consistencyStreak }}</div>
+              <div class="stat-label">Current Streak</div>
+            </div>
+          </div>
+
+          <div class="stat-card info">
+            <div class="stat-icon">⏱️</div>
+            <div class="stat-content">
+              <div class="stat-value">{{ summary()!.avgWorkoutDuration }}m</div>
+              <div class="stat-label">Avg Duration</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weekly Progress -->
+      <div *ngIf="weeklyProgress().length > 0" class="section">
+        <h3>Weekly Progress</h3>
+        <div class="progress-cards">
+          <div *ngFor="let week of weeklyProgress()" class="progress-card">
+            <div class="progress-header">
+              <span class="week-label">{{ formatWeek(week.weekStartDate) }}</span>
+              <span class="workout-count">{{ week.workoutCount }} workouts</span>
+            </div>
+            <div class="progress-stats">
+              <div class="progress-stat">
+                <span class="label">Volume:</span>
+                <span class="value">{{ formatVolume(week.totalVolume) }}</span>
+              </div>
+              <div class="progress-stat">
+                <span class="label">Avg Duration:</span>
+                <span class="value">{{ week.avgWorkoutDuration }}m</span>
+              </div>
+              <div class="progress-stat">
+                <span class="label">Calories:</span>
+                <span class="value">{{ week.caloriesConsumed }} kcal</span>
+              </div>
+              <div class="progress-stat">
+                <span class="label">Compliance:</span>
+                <span class="value">{{ week.complianceRate }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Personal Records -->
+      <div *ngIf="summary() && summary()!.personalRecords.length > 0" class="section">
+        <h3>Personal Records</h3>
+        <div class="records-grid">
+          <div *ngFor="let record of summary()!.personalRecords" class="record-card">
+            <div class="record-icon">🏆</div>
+            <div class="record-info">
+              <h4>{{ record.exerciseName }}</h4>
+              <div class="record-details">
+                <span class="record-value">{{ record.bestWeight }} kg</span>
+                <span class="record-label">× {{ record.bestReps }} reps</span>
+              </div>
+              <div class="record-date">{{ formatDate(record.achievedDate) }}</div>
+            </div>
+          </div>
+
+          <div *ngIf="summary()!.personalRecords.length === 0" class="no-records">
+            <p>No personal records yet. Keep pushing!</p>
+            <button routerLink="/workout/session" class="btn-primary">Start Workout</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Body Metrics -->
+      <div *ngIf="bodyMetrics().length > 0" class="section">
+        <div class="section-header">
+          <h3>Body Metrics</h3>
+          <button (click)="showAddMetrics()" class="btn-secondary">+ Add Entry</button>
+        </div>
+
+        <div class="metrics-chart">
+          <div class="weight-summary">
+            <div class="summary-item">
+              <span class="label">Current Weight:</span>
+              <span class="value highlight">{{ bodyMetrics()[0]?.weightKg }} kg</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Change:</span>
+              <span class="value" [class]="getWeightChangeClass()">
+                {{ weightChange().total >= 0 ? '+' : '' }}{{ weightChange().total }} kg
+                ({{ weightChange().percentage >= 0 ? '+' : '' }}{{ weightChange().percentage }}%)
+              </span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Trend:</span>
+              <span class="value">{{ getTrendEmoji() }} {{ weightTrend() }}</span>
+            </div>
+          </div>
+
+          <div class="metrics-list">
+            <div *ngFor="let metric of bodyMetrics()" class="metric-row">
+              <span class="metric-date">{{ formatDate(metric.date) }}</span>
+              <span class="metric-weight">{{ metric.weightKg }} kg</span>
+              <span *ngIf="metric.bodyFatPercentage" class="metric-bf">
+                BF: {{ metric.bodyFatPercentage }}%
+              </span>
+              <div class="metric-actions">
+                <button (click)="showEditMetrics(metric)" class="btn-icon-small" title="Edit">✏️</button>
+                <button (click)="deleteMetric(metric.id)" class="btn-icon-small" title="Delete">🗑️</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!loading() && !summary()" class="empty-state">
+        <div class="empty-icon">📊</div>
+        <h3>No Data Yet</h3>
+        <p>Start tracking your workouts and nutrition to see your progress!</p>
+        <div class="empty-actions">
+          <button routerLink="/workout/session" class="btn-primary">Start Workout</button>
+          <button routerLink="/nutrition" class="btn-secondary">Log Nutrition</button>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions-section">
+        <h3>Quick Actions</h3>
+        <div class="actions-grid">
+          <button routerLink="/workout/history" class="action-btn">
+            📈 View Workout History
+          </button>
+          <button routerLink="/nutrition" class="action-btn">
+            🍎 Track Nutrition
+          </button>
+          <button (click)="showAddMetrics()" class="action-btn">
+            ⚖️ Log Body Weight
+          </button>
+          <button routerLink="/profile" class="action-btn">
+            👤 Update Profile
+          </button>
+        </div>
+      </div>
+
+      <!-- Body Metrics Modal -->
+      <app-body-metrics-modal
+        *ngIf="showModal()"
+        [existingMetric]="editingMetric()"
+        (saved)="onMetricsSaved()"
+        (cancelled)="onModalCancelled()"
+      ></app-body-metrics-modal>
+    </div>

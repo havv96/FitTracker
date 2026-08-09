@@ -1,0 +1,424 @@
+
+    .nutrition-log-container {
+      padding: 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding-bottom: 100px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .header h2 {
+      margin: 0;
+      color: #333;
+    }
+
+    .date-selector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .date-input {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .btn-icon {
+      background: white;
+      border: 1px solid #ddd;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+
+    .btn-icon:hover:not(:disabled) {
+      background: #f5f5f5;
+      border-color: #999;
+    }
+
+    .btn-icon:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .error-banner {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #d32f2f;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 4px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      max-width: 400px;
+      z-index: 1000;
+    }
+
+    .btn-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .daily-summary {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+
+    .calories-card {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .calories-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .calories-header h3 {
+      margin: 0;
+      color: #333;
+    }
+
+    .calories-remaining {
+      color: #4CAF50;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .calories-remaining.over {
+      color: #f44336;
+    }
+
+    .calories-circle {
+      max-width: 200px;
+      margin: 0 auto 20px;
+    }
+
+    .circular-chart {
+      display: block;
+      max-width: 100%;
+    }
+
+    .circle-bg {
+      fill: none;
+      stroke: #e0e0e0;
+      stroke-width: 2.8;
+    }
+
+    .circle {
+      fill: none;
+      stroke-width: 2.8;
+      stroke-linecap: round;
+      stroke: #4CAF50;
+    }
+
+    .percentage {
+      fill: #333;
+      font-size: 0.5em;
+      font-weight: bold;
+      text-anchor: middle;
+    }
+
+    .calories-values {
+      font-size: 24px;
+      color: #333;
+    }
+
+    .consumed {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+
+    .separator {
+      margin: 0 10px;
+      color: #999;
+    }
+
+    .target {
+      color: #666;
+    }
+
+    .macros-section {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 30px;
+    }
+
+    .macros-section h3 {
+      margin: 0 0 20px 0;
+      color: #333;
+    }
+
+    .macros-grid {
+      display: grid;
+      gap: 20px;
+    }
+
+    .macro-card {
+      padding: 20px;
+      border-radius: 8px;
+      background: #f5f5f5;
+    }
+
+    .macro-card.protein {
+      border-left: 4px solid #FF5722;
+    }
+
+    .macro-card.carbs {
+      border-left: 4px solid #2196F3;
+    }
+
+    .macro-card.fat {
+      border-left: 4px solid #FFC107;
+    }
+
+    .macro-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .macro-name {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .macro-value {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4CAF50 0%, #45a049 100%);
+      transition: width 0.3s;
+    }
+
+    .macro-percent {
+      text-align: right;
+      font-size: 14px;
+      color: #666;
+      font-weight: 600;
+    }
+
+    .meals-section {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .meal-group {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .meal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .meal-header h4 {
+      margin: 0;
+      color: #333;
+    }
+
+    .btn-add {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.3s;
+    }
+
+    .btn-add:hover {
+      background: #45a049;
+    }
+
+    .meal-entries {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .food-entry {
+      display: grid;
+      grid-template-columns: 2fr 3fr auto;
+      gap: 15px;
+      align-items: center;
+      padding: 15px;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+
+    .food-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .food-name {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .food-serving {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .food-macros {
+      display: flex;
+      gap: 15px;
+      font-size: 14px;
+    }
+
+    .calories {
+      font-weight: 600;
+      color: #4CAF50;
+    }
+
+    .macro {
+      color: #666;
+    }
+
+    .food-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-icon-small {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+      opacity: 0.7;
+      transition: opacity 0.3s;
+    }
+
+    .btn-icon-small:hover {
+      opacity: 1;
+    }
+
+    .no-entries {
+      text-align: center;
+      padding: 30px;
+      color: #999;
+      font-style: italic;
+    }
+
+    .meal-total {
+      display: flex;
+      justify-content: space-between;
+      padding: 15px;
+      background: #e3f2fd;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    .total-label {
+      font-weight: 600;
+      color: #1976d2;
+    }
+
+    .total-calories {
+      font-weight: bold;
+      color: #1976d2;
+    }
+
+    .btn-primary {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+      background: #45a049;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .btn-large {
+      padding: 16px 32px;
+      font-size: 18px;
+    }
+
+    .btn-fixed {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 100;
+    }
+
+    @media (max-width: 768px) {
+      .food-entry {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .food-macros {
+        flex-wrap: wrap;
+      }
+
+      .btn-fixed {
+        left: 20px;
+        right: 20px;
+        width: calc(100% - 40px);
+      }
+    }

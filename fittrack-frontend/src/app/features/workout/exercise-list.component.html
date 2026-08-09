@@ -1,0 +1,107 @@
+    <div class="exercise-list-container">
+      <div class="header">
+        <h2>Exercise Library</h2>
+        <p class="subtitle">Browse and search exercises for your workout</p>
+      </div>
+
+      <!-- Search and Filters -->
+      <div class="filters">
+        <div class="search-box">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="onSearchChange($event)"
+            placeholder="Search exercises..."
+            class="search-input"
+          />
+        </div>
+
+        <div class="filter-row">
+          <select [(ngModel)]="selectedMuscleGroup" (ngModelChange)="onFilterChange()" class="filter-select">
+            <option [ngValue]="null">All Muscle Groups</option>
+            <option *ngFor="let group of muscleGroups" [value]="group">{{ group }}</option>
+          </select>
+
+          <select [(ngModel)]="selectedEquipment" (ngModelChange)="onFilterChange()" class="filter-select">
+            <option [ngValue]="null">All Equipment</option>
+            <option *ngFor="let equipment of equipmentTypes" [value]="equipment">{{ equipment }}</option>
+          </select>
+
+          <button (click)="clearFilters()" class="btn-secondary" *ngIf="hasFilters()">
+            Clear Filters
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="loading()" class="loading">
+        <p>Loading exercises...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="error()" class="error">
+        <p>{{ error() }}</p>
+        <button (click)="loadExercises()" class="btn-primary">Retry</button>
+      </div>
+
+      <!-- Exercise Grid -->
+      <div *ngIf="!loading() && !error()" class="exercise-grid">
+        <div
+          *ngFor="let exercise of exercises()"
+          class="exercise-card"
+          (click)="selectExercise(exercise)"
+          [class.selected]="selectedExercise()?.id === exercise.id"
+        >
+          <div class="exercise-header">
+            <h3>{{ exercise.name }}</h3>
+            <span class="badge muscle-group">{{ exercise.muscleGroup }}</span>
+          </div>
+          <div class="exercise-details">
+            <span class="badge equipment">{{ exercise.equipmentType }}</span>
+            <p *ngIf="exercise.description" class="description">{{ exercise.description }}</p>
+          </div>
+        </div>
+
+        <div *ngIf="exercises().length === 0" class="no-results">
+          <p>No exercises found matching your criteria.</p>
+          <button (click)="clearFilters()" class="btn-secondary">Clear Filters</button>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="totalPages() > 1" class="pagination">
+        <button
+          (click)="previousPage()"
+          [disabled]="currentPage() === 0"
+          class="btn-secondary"
+        >
+          Previous
+        </button>
+        <span class="page-info">
+          Page {{ currentPage() + 1 }} of {{ totalPages() }}
+        </span>
+        <button
+          (click)="nextPage()"
+          [disabled]="currentPage() >= totalPages() - 1"
+          class="btn-secondary"
+        >
+          Next
+        </button>
+      </div>
+
+      <!-- Selected Exercise Details -->
+      <div *ngIf="selectedExercise()" class="selected-details">
+        <h3>{{ selectedExercise()!.name }}</h3>
+        <div class="details-content">
+          <p><strong>Muscle Group:</strong> {{ selectedExercise()!.muscleGroup }}</p>
+          <p><strong>Equipment:</strong> {{ selectedExercise()!.equipmentType }}</p>
+          <p *ngIf="selectedExercise()!.description">
+            <strong>Description:</strong> {{ selectedExercise()!.description }}
+          </p>
+        </div>
+        <div class="actions">
+          <button (click)="addToWorkout()" class="btn-primary">Add to Workout</button>
+          <button (click)="closeDetails()" class="btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>

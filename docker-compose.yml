@@ -48,6 +48,20 @@ services:
       retries: 3
       start_period: 40s
 
+  frontend:
+    build:
+      context: ./fittrack-frontend
+      dockerfile: Dockerfile
+    container_name: fittrack-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "4200:80"
+    networks:
+      - fittrack-network
+
 volumes:
   postgres_data:
     driver: local

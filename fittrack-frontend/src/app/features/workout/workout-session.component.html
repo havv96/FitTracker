@@ -1,0 +1,168 @@
+    <div class="workout-session-container">
+      <!-- Header -->
+      <div class="header">
+        <h2>{{ workoutTitle() }}</h2>
+        <div class="workout-stats" *ngIf="currentWorkout()">
+          <span class="stat">
+            <strong>Volume:</strong> {{ totalVolume() }} kg
+          </span>
+          <span class="stat">
+            <strong>Sets:</strong> {{ totalSets() }}
+          </span>
+          <span class="stat">
+            <strong>Exercises:</strong> {{ uniqueExercises() }}
+          </span>
+          <span class="stat">
+            <strong>Duration:</strong> {{ workoutDuration() }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Start Workout (if no active workout) -->
+      <div *ngIf="!currentWorkout()" class="start-workout">
+        <p>No active workout session.</p>
+        <button (click)="startWorkout()" class="btn-primary btn-large">
+          Start New Workout
+        </button>
+      </div>
+
+      <!-- Active Workout Session -->
+      <div *ngIf="currentWorkout()" class="active-session">
+        <!-- Exercise Selection -->
+        <div class="exercise-selector">
+          <h3>Select Exercise</h3>
+          <select [(ngModel)]="selectedExerciseId" (ngModelChange)="onExerciseChange()" class="select-large">
+            <option [ngValue]="null">Choose an exercise...</option>
+            <option *ngFor="let exercise of exercises()" [ngValue]="exercise.id">
+              {{ exercise.name }} ({{ exercise.muscleGroup }})
+            </option>
+          </select>
+          <button (click)="browseExercises()" class="btn-secondary">
+            Browse All Exercises
+          </button>
+        </div>
+
+        <!-- Previous Workout Data -->
+        <div *ngIf="selectedExercise() && previousSets().length > 0" class="previous-data">
+          <h4>Last Time:</h4>
+          <div class="previous-sets">
+            <div *ngFor="let set of previousSets()" class="previous-set">
+              Set {{ set.setNumber }}: {{ set.reps }} reps × {{ set.weightKg }} kg
+              <span *ngIf="set.rpe" class="rpe">RPE {{ set.rpe }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Set Entry Form -->
+        <div *ngIf="selectedExercise()" class="set-form">
+          <h3>Log Set</h3>
+          <form [formGroup]="setForm" (ngSubmit)="logSet()">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Reps</label>
+                <input
+                  type="number"
+                  formControlName="reps"
+                  class="form-input"
+                  min="1"
+                  max="1000"
+                />
+                <div *ngIf="setForm.get('reps')?.invalid && setForm.get('reps')?.touched" class="error-text">
+                  Reps must be between 1 and 1000
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Weight (kg)</label>
+                <input
+                  type="number"
+                  formControlName="weight"
+                  class="form-input"
+                  min="0"
+                  step="0.5"
+                />
+                <div *ngIf="setForm.get('weight')?.invalid && setForm.get('weight')?.touched" class="error-text">
+                  Weight must be non-negative
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>RPE (1-10)</label>
+                <select formControlName="rpe" class="form-input">
+                  <option [ngValue]="null">Optional</option>
+                  <option *ngFor="let i of [1,2,3,4,5,6,7,8,9,10]" [value]="i">{{ i }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="submit"
+                [disabled]="setForm.invalid || loggingSet()"
+                class="btn-primary btn-large"
+              >
+                {{ loggingSet() ? 'Logging...' : 'Log Set' }}
+              </button>
+              <button
+                type="button"
+                (click)="startRestTimer()"
+                class="btn-secondary"
+                [disabled]="restTimerActive()"
+              >
+                Start Rest Timer
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Rest Timer -->
+        <div *ngIf="restTimerActive()" class="rest-timer">
+          <h3>Rest Timer</h3>
+          <div class="timer-display">{{ formatTime(restTimeRemaining()) }}</div>
+          <div class="timer-actions">
+            <button (click)="pauseRestTimer()" *ngIf="!restTimerPaused()" class="btn-secondary">
+              Pause
+            </button>
+            <button (click)="resumeRestTimer()" *ngIf="restTimerPaused()" class="btn-secondary">
+              Resume
+            </button>
+            <button (click)="stopRestTimer()" class="btn-secondary">Stop</button>
+          </div>
+        </div>
+
+        <!-- Current Workout Sets -->
+        <div class="workout-sets" *ngIf="currentSets().length > 0">
+          <h3>Today's Sets</h3>
+          <div class="sets-list">
+            <div *ngFor="let set of currentSets()" class="set-item">
+              <div class="set-info">
+                <span class="set-number">Set {{ set.setNumber }}</span>
+                <span class="exercise-name">{{ set.exerciseName }}</span>
+              </div>
+              <div class="set-details">
+                <span>{{ set.reps }} reps × {{ set.weightKg }} kg</span>
+                <span class="volume">= {{ set.volumeLoad }} kg</span>
+                <span *ngIf="set.rpe" class="rpe-badge">RPE {{ set.rpe }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Finish Workout -->
+        <div class="finish-section">
+          <button
+            (click)="confirmFinishWorkout()"
+            [disabled]="finishingWorkout() || currentSets().length === 0"
+            class="btn-danger btn-large"
+          >
+            {{ finishingWorkout() ? 'Finishing...' : 'Finish Workout' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Error Display -->
+      <div *ngIf="error()" class="error-banner">
+        {{ error() }}
+        <button (click)="error.set(null)" class="btn-close">×</button>
+      </div>
+    </div>

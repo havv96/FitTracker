@@ -1,0 +1,77 @@
+
+    <div class="dashboard-container">
+      <!-- Header with Navigation -->
+      <nav class="navbar">
+        <div class="nav-brand">
+          <h1>FitTrack Pro</h1>
+        </div>
+        <div class="nav-menu">
+          <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
+          <a routerLink="/workout/session" routerLinkActive="active">Workout</a>
+          <a routerLink="/nutrition" routerLinkActive="active">Nutrition</a>
+          <a routerLink="/analytics" routerLinkActive="active">Progress</a>
+          <a routerLink="/profile" routerLinkActive="active">Profile</a>
+        </div>
+        <div class="nav-actions">
+          <span class="user-email">{{ (currentUser | async)?.email }}</span>
+          <button (click)="logout()" class="btn-logout">Logout</button>
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <div class="dashboard-content">
+        <div class="welcome-section">
+          <h2>Welcome back!</h2>
+          <p>Ready to crush your fitness goals today?</p>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <div class="action-card" routerLink="/workout/session">
+            <div class="action-icon">🏋️</div>
+            <h3>Start Workout</h3>
+            <p>Begin tracking your workout session</p>
+          </div>
+
+          <div class="action-card" routerLink="/nutrition">
+            <div class="action-icon">🍎</div>
+            <h3>Track Nutrition</h3>
+            <p>Log your meals and macros</p>
+          </div>
+
+          <div class="action-card" routerLink="/analytics">
+            <div class="action-icon">📊</div>
+            <h3>View Progress</h3>
+            <p>Track your fitness journey</p>
+          </div>
+
+          <div class="action-card" routerLink="/profile">
+            <div class="action-icon">👤</div>
+            <h3>Profile</h3>
+            <p>Manage your profile and goals</p>
+          </div>
+        </div>
+
+        <!-- Active Workout Alert -->
+        <div *ngIf="hasActiveWorkout()" class="active-workout-alert">
+          <h3>⚡ You have an active workout!</h3>
+          <p>Continue where you left off</p>
+          <button routerLink="/workout/session" class="btn-primary">
+            Resume Workout
+          </button>
+        </div>
+
+        <!-- Coming Soon Features -->
+        <div class="coming-soon">
+          <h3>Coming Soon</h3>
+          <div class="feature-list">
+            <div class="feature-item">💧 Hydration Monitor</div>
+            <div class="feature-item">😴 Sleep Tracking</div>
+            <div class="feature-item">📈 Advanced Analytics</div>
+            <div class="feature-item">🎯 Goal Setting & Reminders</div>
+            <div class="feature-item">📱 Progressive Web App</div>
+            <div class="feature-item">🏆 Achievements & Streaks</div>
+          </div>
+        </div>
+      </div>
+    </div>

@@ -1,0 +1,153 @@
+    <div class="workout-history-container">
+      <div class="header">
+        <h2>Workout History</h2>
+        <p class="subtitle">View your past workouts and track your progress</p>
+      </div>
+
+      <!-- Date Range Selector -->
+      <div class="date-selector">
+        <div class="quick-filters">
+          <button
+            *ngFor="let filter of quickFilters"
+            (click)="selectQuickFilter(filter.value)"
+            [class.active]="selectedFilter() === filter.value"
+            class="filter-btn"
+          >
+            {{ filter.label }}
+          </button>
+        </div>
+
+        <div class="custom-range">
+          <label>Custom Range:</label>
+          <input
+            type="date"
+            [(ngModel)]="startDate"
+            (change)="onDateChange()"
+            class="date-input"
+          />
+          <span>to</span>
+          <input
+            type="date"
+            [(ngModel)]="endDate"
+            (change)="onDateChange()"
+            class="date-input"
+          />
+          <button (click)="loadHistory()" class="btn-primary">Apply</button>
+        </div>
+      </div>
+
+      <!-- Summary Stats -->
+      <div *ngIf="workouts().length > 0" class="summary-stats">
+        <div class="stat-card">
+          <div class="stat-value">{{ totalWorkouts() }}</div>
+          <div class="stat-label">Total Workouts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ totalVolume() }} kg</div>
+          <div class="stat-label">Total Volume</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ totalSets() }}</div>
+          <div class="stat-label">Total Sets</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ averageDuration() }} min</div>
+          <div class="stat-label">Avg Duration</div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="loading()" class="loading">
+        <p>Loading workout history...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="error()" class="error">
+        <p>{{ error() }}</p>
+        <button (click)="loadHistory()" class="btn-primary">Retry</button>
+      </div>
+
+      <!-- Workout List -->
+      <div *ngIf="!loading() && !error()" class="workouts-list">
+        <div
+          *ngFor="let workout of workouts()"
+          class="workout-card"
+          (click)="viewWorkoutDetail(workout.id)"
+        >
+          <div class="workout-header">
+            <h3>{{ formatDate(workout.workoutDate) }}</h3>
+            <span class="duration">{{ workout.durationMinutes }} min</span>
+          </div>
+          <div class="workout-stats-row">
+            <div class="stat-item">
+              <span class="label">Volume:</span>
+              <span class="value">{{ workout.totalVolume }} kg</span>
+            </div>
+            <div class="stat-item">
+              <span class="label">Sets:</span>
+              <span class="value">{{ workout.totalSets }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="label">Exercises:</span>
+              <span class="value">{{ workout.totalExercises }}</span>
+            </div>
+          </div>
+          <div class="workout-time">
+            {{ formatTime(workout.startTime) }} - {{ formatTime(workout.endTime) }}
+          </div>
+        </div>
+
+        <div *ngIf="workouts().length === 0" class="no-workouts">
+          <p>No workouts found for this period.</p>
+          <button (click)="selectQuickFilter('month')" class="btn-secondary">
+            View This Month
+          </button>
+        </div>
+      </div>
+
+      <!-- Workout Detail Modal -->
+      <div *ngIf="selectedWorkoutDetail()" class="modal-overlay" (click)="closeDetail()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Workout Details</h3>
+            <button (click)="closeDetail()" class="btn-close">×</button>
+          </div>
+
+          <div class="modal-body" *ngIf="selectedWorkoutDetail() as workout">
+            <div class="detail-section">
+              <h4>{{ formatDate(workout.workoutDate) }}</h4>
+              <p class="detail-time">
+                {{ formatTime(workout.startTime) }} - {{ workout.endTime ? formatTime(workout.endTime) : 'In Progress' }}
+                ({{ workout.durationMinutes }} minutes)
+              </p>
+              <p *ngIf="workout.notes" class="workout-notes">{{ workout.notes }}</p>
+            </div>
+
+            <div class="detail-section">
+              <h4>Summary</h4>
+              <div class="detail-stats">
+                <div class="detail-stat">
+                  <strong>Total Volume:</strong> {{ workout.totalVolume }} kg
+                </div>
+                <div class="detail-stat">
+                  <strong>Total Sets:</strong> {{ workout.sets.length }}
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h4>Sets</h4>
+              <div class="sets-table">
+                <div *ngFor="let set of workout.sets; let i = index" class="set-row">
+                  <span class="set-number">{{ i + 1 }}</span>
+                  <span class="set-exercise">{{ set.exerciseName }}</span>
+                  <span class="set-data">{{ set.reps }} × {{ set.weightKg }} kg</span>
+                  <span class="set-volume">{{ set.volumeLoad }} kg</span>
+                  <span *ngIf="set.rpe" class="set-rpe">RPE {{ set.rpe }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>

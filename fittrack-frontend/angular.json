@@ -35,6 +35,33 @@
           },
           "configurations": {
             "production": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ],
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "docker": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.docker.ts"
+                }
+              ],
               "budgets": [
                 {
                   "type": "initial",
@@ -62,6 +89,9 @@
           "configurations": {
             "production": {
               "buildTarget": "fittrack-frontend:build:production"
+            },
+            "docker": {
+              "buildTarget": "fittrack-frontend:build:docker"
             },
             "development": {
               "buildTarget": "fittrack-frontend:build:development"
