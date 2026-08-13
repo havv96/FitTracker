@@ -1,5 +1,9 @@
 <div class="workout-session">
-  @if (!currentWorkout()) {
+  @if (hydratingActive()) {
+    <ft-card>
+      <div class="loading-hint mono" i18n="@@workout.loading">Loading…</div>
+    </ft-card>
+  } @else if (!currentWorkout()) {
     <ft-card>
       <ft-empty-state
         title="No active workout"

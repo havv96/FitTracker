@@ -1,7 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, catchError, distinctUntilChanged, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
 import {
   Exercise,
   WorkoutStartRequest,
@@ -19,12 +20,29 @@ import {
 })
 export class WorkoutService {
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
   private baseUrl = `${environment.apiBaseUrl}/workouts`;
   private exercisesUrl = `${environment.apiBaseUrl}/exercises`;
 
   // Current active workout state
   currentWorkout = signal<WorkoutResponse | null>(null);
   currentWorkoutSets = signal<WorkoutSetResponse[]>([]);
+  hydratingActive = signal<boolean>(false);
+
+  constructor() {
+    this.authService.currentUser$
+      .pipe(distinctUntilChanged((a, b) => a?.id === b?.id))
+      .subscribe((user) => {
+        if (user) {
+          this.hydratingActive.set(true);
+          this.loadActiveWorkout()
+            .pipe(catchError(() => of(null)))
+            .subscribe(() => this.hydratingActive.set(false));
+        } else {
+          this.clearCurrentWorkout();
+        }
+      });
+  }
 
   // Exercise Methods
   getAllExercises(): Observable<Exercise[]> {
@@ -95,6 +113,34 @@ export class WorkoutService {
 
   getWorkoutDetail(workoutId: number): Observable<WorkoutDetailResponse> {
     return this.http.get<WorkoutDetailResponse>(`${this.baseUrl}/${workoutId}`);
+  }
+
+  loadActiveWorkout(): Observable<WorkoutDetailResponse | null> {
+    return this.http.get<WorkoutDetailResponse | null>(`${this.baseUrl}/active`).pipe(
+      tap((detail) => {
+        if (detail) {
+          this.currentWorkout.set(this.toSummary(detail));
+          this.currentWorkoutSets.set(detail.sets ?? []);
+        } else {
+          this.currentWorkout.set(null);
+          this.currentWorkoutSets.set([]);
+        }
+      }),
+    );
+  }
+
+  private toSummary(detail: WorkoutDetailResponse): WorkoutResponse {
+    return {
+      id: detail.id,
+      userId: detail.userId,
+      workoutDate: detail.workoutDate,
+      startTime: detail.startTime,
+      endTime: detail.endTime,
+      notes: detail.notes,
+      totalVolume: detail.totalVolume,
+      totalSets: detail.sets?.length ?? 0,
+      durationMinutes: detail.durationMinutes,
+    };
   }
 
   getPreviousWorkoutData(workoutId: number, exerciseId: number): Observable<WorkoutSetResponse[]> {

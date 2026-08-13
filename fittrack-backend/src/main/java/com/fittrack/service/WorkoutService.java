@@ -3,6 +3,7 @@ package com.fittrack.service;
 import com.fittrack.dto.request.WorkoutSetRequest;
 import com.fittrack.dto.request.WorkoutStartRequest;
 import com.fittrack.dto.response.*;
+import com.fittrack.exception.ActiveWorkoutExistsException;
 import com.fittrack.exception.ExerciseNotFoundException;
 import com.fittrack.exception.WorkoutNotFoundException;
 import com.fittrack.model.Exercise;
@@ -37,6 +38,11 @@ public class WorkoutService {
     @Transactional
     public WorkoutResponse startWorkout(Long userId, WorkoutStartRequest request) {
         log.info("Starting workout for user {}", userId);
+
+        workoutRepository.findActiveWorkout(userId).ifPresent(active -> {
+            throw new ActiveWorkoutExistsException(
+                    "An active workout already exists (id=" + active.getId() + "). Finish it before starting a new one.");
+        });
 
         Workout workout = new Workout();
         workout.setUserId(userId);
@@ -136,6 +142,17 @@ public class WorkoutService {
         List<WorkoutSet> sets = setRepository.findByWorkoutIdOrderBySetNumberAsc(workoutId);
 
         return new WorkoutDetailResponse(workout, sets);
+    }
+
+    @Transactional(readOnly = true)
+    public WorkoutDetailResponse getActiveWorkout(Long userId) {
+        log.info("Fetching active workout for user {}", userId);
+
+        return workoutRepository.findActiveWorkout(userId)
+                .map(workout -> new WorkoutDetailResponse(
+                        workout,
+                        setRepository.findByWorkoutIdOrderBySetNumberAsc(workout.getId())))
+                .orElse(null);
     }
 
     @Transactional(readOnly = true)
