@@ -6,6 +6,7 @@ import com.fittrack.dto.response.WorkoutDetailResponse;
 import com.fittrack.dto.response.WorkoutHistoryResponse;
 import com.fittrack.dto.response.WorkoutResponse;
 import com.fittrack.dto.response.WorkoutSetResponse;
+import com.fittrack.exception.ActiveWorkoutExistsException;
 import com.fittrack.exception.ExerciseNotFoundException;
 import com.fittrack.exception.WorkoutNotFoundException;
 import com.fittrack.model.Exercise;
@@ -92,6 +93,7 @@ class WorkoutServiceTest {
     @Test
     void testStartWorkout_Success() {
         // Arrange
+        when(workoutRepository.findActiveWorkout(1L)).thenReturn(Optional.empty());
         when(workoutRepository.save(any(Workout.class))).thenReturn(workout);
 
         // Act
@@ -106,6 +108,22 @@ class WorkoutServiceTest {
         assertEquals(0, response.getTotalSets());
 
         verify(workoutRepository).save(any(Workout.class));
+    }
+
+    @Test
+    void testStartWorkout_ThrowsWhenActiveWorkoutExists() {
+        // Arrange
+        when(workoutRepository.findActiveWorkout(1L)).thenReturn(Optional.of(workout));
+
+        // Act & Assert
+        ActiveWorkoutExistsException ex = assertThrows(
+                ActiveWorkoutExistsException.class,
+                () -> workoutService.startWorkout(1L, startRequest));
+        assertTrue(ex.getMessage().contains("id=1"),
+                "Message should reference the existing active workout id");
+
+        verify(workoutRepository).findActiveWorkout(1L);
+        verify(workoutRepository, never()).save(any(Workout.class));
     }
 
     @Test
@@ -248,5 +266,41 @@ class WorkoutServiceTest {
         });
 
         verify(workoutRepository).findByIdAndUserId(1L, 1L);
+    }
+
+    @Test
+    void testGetActiveWorkout_ReturnsDetail_WhenActiveExists() {
+        // Arrange
+        when(workoutRepository.findActiveWorkout(1L)).thenReturn(Optional.of(workout));
+        when(workoutSetRepository.findByWorkoutIdOrderBySetNumberAsc(1L)).thenReturn(List.of(workoutSet));
+
+        // Act
+        WorkoutDetailResponse response = workoutService.getActiveWorkout(1L);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(1L, response.getId());
+        assertEquals(1L, response.getUserId());
+        assertNotNull(response.getSets());
+        assertEquals(1, response.getSets().size());
+        assertEquals(1L, response.getSets().get(0).getId());
+
+        verify(workoutRepository).findActiveWorkout(1L);
+        verify(workoutSetRepository).findByWorkoutIdOrderBySetNumberAsc(1L);
+    }
+
+    @Test
+    void testGetActiveWorkout_ReturnsNull_WhenNoActive() {
+        // Arrange
+        when(workoutRepository.findActiveWorkout(1L)).thenReturn(Optional.empty());
+
+        // Act
+        WorkoutDetailResponse response = workoutService.getActiveWorkout(1L);
+
+        // Assert
+        assertNull(response);
+
+        verify(workoutRepository).findActiveWorkout(1L);
+        verify(workoutSetRepository, never()).findByWorkoutIdOrderBySetNumberAsc(anyLong());
     }
 }

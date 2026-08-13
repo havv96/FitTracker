@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleUserAlreadyExists(
-            UserAlreadyExistsException ex,
+    @ExceptionHandler({UserAlreadyExistsException.class, ActiveWorkoutExistsException.class})
+    public ResponseEntity<ErrorResponse> handleConflict(
+            RuntimeException ex,
             HttpServletRequest request) {
 
         ErrorResponse error = ErrorResponse.builder()

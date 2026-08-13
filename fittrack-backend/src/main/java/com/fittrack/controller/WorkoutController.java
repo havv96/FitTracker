@@ -37,7 +37,8 @@ public class WorkoutController {
     @Operation(summary = "Start new workout", description = "Creates a new workout session for the authenticated user (US-04)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Workout started successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input or active workout already exists")
+            @ApiResponse(responseCode = "400", description = "Invalid input"),
+            @ApiResponse(responseCode = "409", description = "Active workout already exists — finish it before starting a new one")
     })
     @PostMapping
     public ResponseEntity<WorkoutResponse> startWorkout(@Valid @RequestBody WorkoutStartRequest request) {
@@ -89,6 +90,28 @@ public class WorkoutController {
         List<WorkoutHistoryResponse> history = workoutService.getWorkoutHistory(userId, startDate, endDate);
 
         return ResponseEntity.ok(history);
+    }
+
+    @Operation(
+            summary = "Get active workout",
+            description = "Returns the current in-progress workout (endTime IS NULL) for the authenticated user, including all logged sets"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Active workout returned"),
+            @ApiResponse(responseCode = "204", description = "No active workout in progress")
+    })
+    @GetMapping("/active")
+    public ResponseEntity<WorkoutDetailResponse> getActiveWorkout() {
+        Long userId = SecurityUtils.currentUserId();
+        log.info("GET /api/v1/workouts/active - Fetching active workout for user {}", userId);
+
+        WorkoutDetailResponse active = workoutService.getActiveWorkout(userId);
+
+        if (active == null) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(active);
     }
 
     @GetMapping("/{id}")

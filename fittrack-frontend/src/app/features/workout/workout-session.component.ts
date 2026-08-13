@@ -60,6 +60,7 @@ export class WorkoutSessionComponent implements OnInit, OnDestroy {
 
   readonly currentWorkout = this.workoutService.currentWorkout;
   readonly currentSets = this.workoutService.currentWorkoutSets;
+  readonly hydratingActive = this.workoutService.hydratingActive;
   readonly exercises = signal<Exercise[]>([]);
   selectedExerciseId: number | null = null;
   readonly selectedExercise = signal<Exercise | null>(null);
