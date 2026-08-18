@@ -1,19 +1,19 @@
 <div class="profile">
-  @if (isLoading && !profile) {
+  @if (isLoading() && !profile()) {
     <ft-card>
       <div class="loading mono" i18n="@@common.loading">Loading…</div>
     </ft-card>
   }
 
-  @if (errorMessage) {
-    <div class="banner banner-error">{{ errorMessage }}</div>
+  @if (errorMessage()) {
+    <div class="banner banner-error">{{ errorMessage() }}</div>
   }
-  @if (successMessage) {
-    <div class="banner banner-success">{{ successMessage }}</div>
+  @if (successMessage()) {
+    <div class="banner banner-success">{{ successMessage() }}</div>
   }
 
-  @if (!isLoading || profile) {
-    @if (!isEditMode && profile; as p) {
+  @if (!isLoading() || profile()) {
+    @if (!isEditMode() && profile(); as p) {
       <div class="profile-hero">
         <div class="hero-avatar" aria-hidden="true">
           {{ getGenderLabel(p.gender).charAt(0) }}
@@ -113,11 +113,11 @@
           </div>
         }
       </div>
-    } @else if (isEditMode) {
+    } @else if (isEditMode()) {
       <ft-card [padded]="false">
         <header class="edit-header">
           <div class="edit-title" i18n="@@profile.edit.title">Edit profile</div>
-          @if (profile) {
+          @if (profile()) {
             <button ft-button size="sm" (click)="toggleEditMode()" i18n="@@common.cancel">Cancel</button>
           }
         </header>
@@ -198,10 +198,10 @@
               ft-button
               variant="primary"
               type="submit"
-              [attr.disabled]="isLoading ? true : null"
+              [attr.disabled]="isLoading() ? true : null"
             >
               <ft-icon name="save" [size]="14" />
-              @if (isLoading) {
+              @if (isLoading()) {
                 <ng-container i18n="@@profile.saving">Saving…</ng-container>
               } @else {
                 <ng-container i18n="@@profile.save">Save profile</ng-container>
@@ -219,7 +219,7 @@
           i18n-message="@@profile.emptyMessage"
           icon="user"
         >
-          <button ft-button variant="primary" (click)="isEditMode = true" i18n="@@profile.createCta">
+          <button ft-button variant="primary" (click)="isEditMode.set(true)" i18n="@@profile.createCta">
             Set up profile
           </button>
         </ft-empty-state>
