@@ -116,10 +116,17 @@ export class ProfileComponent implements OnInit {
 
     this.profileService.getProfile().subscribe({
       next: (response) => {
-        this.profile = response;
-        this.populateForm(response);
+        if (this.isProfileUnset(response)) {
+          // Backend now auto-creates a blank profile row on signup; treat it as "not set up yet"
+          // so the setup form renders (no cancel button, no null-valued hero card).
+          this.profile = null;
+          this.isEditMode = true;
+        } else {
+          this.profile = response;
+          this.populateForm(response);
+          this.isEditMode = false;
+        }
         this.isLoading = false;
-        this.isEditMode = false;
       },
       error: (error) => {
         if (error.status === 404) {
@@ -130,6 +137,17 @@ export class ProfileComponent implements OnInit {
         this.isLoading = false;
       },
     });
+  }
+
+  private isProfileUnset(profile: ProfileResponse): boolean {
+    return (
+      profile.heightCm == null &&
+      !profile.dateOfBirth &&
+      !profile.gender &&
+      !profile.activityLevel &&
+      !profile.weightGoal &&
+      profile.targetWeightKg == null
+    );
   }
 
   populateForm(profile: ProfileResponse): void {
