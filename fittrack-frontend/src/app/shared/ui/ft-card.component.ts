@@ -11,13 +11,9 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
         <div class="panel-actions"><ng-content select="[card-actions]" /></div>
       </header>
     }
-    @if (padded()) {
-      <div class="panel-body">
-        <ng-content />
-      </div>
-    } @else {
+    <div [class.panel-body]="padded()">
       <ng-content />
-    }
+    </div>
   `,
   host: {
     '[class]': `"ft-card" + (interactive() ? " interactive" : "") + (tone() ? " tone-" + tone() : "")`,
