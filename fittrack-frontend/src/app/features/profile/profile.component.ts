@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProfileRequest, ProfileResponse } from '../../core/models/profile.model';
 import { ProfileService } from '../../core/services/profile.service';
@@ -35,12 +35,12 @@ export class ProfileComponent implements OnInit {
   private metricsService = inject(MetricsService);
 
   profileForm!: FormGroup;
-  profile: ProfileResponse | null = null;
-  latestWeightKg: number | null = null;
-  isEditMode = false;
-  isLoading = false;
-  errorMessage = '';
-  successMessage = '';
+  readonly profile = signal<ProfileResponse | null>(null);
+  readonly latestWeightKg = signal<number | null>(null);
+  readonly isEditMode = signal(false);
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal('');
+  readonly successMessage = signal('');
 
   readonly genderOptions = [
     { value: 'MALE', label: $localize`:@@profile.gender.male:Male` },
@@ -102,15 +102,15 @@ export class ProfileComponent implements OnInit {
   }
 
   loadProfile(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set('');
 
     this.metricsService.getBodyMetrics().subscribe({
       next: (metrics) => {
-        this.latestWeightKg = this.pickLatestWeight(metrics);
+        this.latestWeightKg.set(this.pickLatestWeight(metrics));
       },
       error: () => {
-        this.latestWeightKg = null;
+        this.latestWeightKg.set(null);
       },
     });
 
@@ -119,22 +119,22 @@ export class ProfileComponent implements OnInit {
         if (this.isProfileUnset(response)) {
           // Backend now auto-creates a blank profile row on signup; treat it as "not set up yet"
           // so the setup form renders (no cancel button, no null-valued hero card).
-          this.profile = null;
-          this.isEditMode = true;
+          this.profile.set(null);
+          this.isEditMode.set(true);
         } else {
-          this.profile = response;
+          this.profile.set(response);
           this.populateForm(response);
-          this.isEditMode = false;
+          this.isEditMode.set(false);
         }
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
       error: (error) => {
         if (error.status === 404) {
-          this.isEditMode = true;
+          this.isEditMode.set(true);
         } else {
-          this.errorMessage = $localize`:@@profile.errorLoad:Could not load your profile.`;
+          this.errorMessage.set($localize`:@@profile.errorLoad:Could not load your profile.`);
         }
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
     });
   }
@@ -158,7 +158,7 @@ export class ProfileComponent implements OnInit {
       activityLevel: profile.activityLevel,
       weightGoal: profile.weightGoal,
       targetWeightKg: profile.targetWeightKg,
-      currentWeightKg: this.latestWeightKg,
+      currentWeightKg: this.latestWeightKg(),
     });
   }
 
@@ -169,41 +169,44 @@ export class ProfileComponent implements OnInit {
   }
 
   toggleEditMode(): void {
-    this.isEditMode = !this.isEditMode;
-    this.errorMessage = '';
-    this.successMessage = '';
-    if (!this.isEditMode && this.profile) {
-      this.populateForm(this.profile);
+    const next = !this.isEditMode();
+    this.isEditMode.set(next);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+    const current = this.profile();
+    if (!next && current) {
+      this.populateForm(current);
     }
   }
 
   saveProfile(): void {
     if (this.profileForm.invalid) {
       this.markFormGroupTouched(this.profileForm);
-      this.errorMessage = $localize`:@@profile.errorRequired:Please fill in every field.`;
+      this.errorMessage.set($localize`:@@profile.errorRequired:Please fill in every field.`);
       return;
     }
 
-    this.isLoading = true;
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
 
     const request: ProfileRequest = this.profileForm.value;
 
     this.profileService.createOrUpdateProfile(request).subscribe({
       next: (response) => {
-        this.profile = response;
-        this.successMessage = $localize`:@@profile.saved:Profile saved.`;
-        this.isEditMode = false;
-        this.isLoading = false;
+        this.profile.set(response);
+        this.successMessage.set($localize`:@@profile.saved:Profile saved.`);
+        this.isEditMode.set(false);
+        this.isLoading.set(false);
 
-        setTimeout(() => (this.successMessage = ''), 3000);
+        setTimeout(() => this.successMessage.set(''), 3000);
       },
       error: (error) => {
-        this.errorMessage =
+        this.errorMessage.set(
           error.error?.message ||
-          $localize`:@@profile.errorSave:Could not save your profile. Please try again.`;
-        this.isLoading = false;
+            $localize`:@@profile.errorSave:Could not save your profile. Please try again.`,
+        );
+        this.isLoading.set(false);
       },
     });
   }
