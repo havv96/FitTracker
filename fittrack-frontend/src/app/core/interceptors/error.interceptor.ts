@@ -2,6 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { ToastService } from '../../shared/components/toast/toast.service';
+import { SKIP_ERROR_TOAST_STATUSES } from '../http/skip-error-toast';
 
 /**
  * Maps HTTP error statuses to user-friendly messages and surfaces them via ToastService.
@@ -57,7 +58,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         url: req.url
       });
 
-      if (error.status !== 401) {
+      if (error.status !== 401 && !req.context.get(SKIP_ERROR_TOAST_STATUSES).includes(error.status)) {
         toast.error(errorMessage);
       }
 

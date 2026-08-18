@@ -6,6 +6,7 @@ import com.fittrack.dto.response.AuthResponse;
 import com.fittrack.exception.InvalidCredentialsException;
 import com.fittrack.exception.UserAlreadyExistsException;
 import com.fittrack.model.User;
+import com.fittrack.repository.UserProfileRepository;
 import com.fittrack.repository.UserRepository;
 import com.fittrack.security.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,9 @@ class AuthServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private UserProfileRepository userProfileRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;

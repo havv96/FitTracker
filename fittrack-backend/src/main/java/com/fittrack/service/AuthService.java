@@ -6,6 +6,8 @@ import com.fittrack.dto.response.AuthResponse;
 import com.fittrack.exception.InvalidCredentialsException;
 import com.fittrack.exception.UserAlreadyExistsException;
 import com.fittrack.model.User;
+import com.fittrack.model.UserProfile;
+import com.fittrack.repository.UserProfileRepository;
 import com.fittrack.repository.UserRepository;
 import com.fittrack.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ import java.time.LocalDateTime;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
     private final AuthenticationManager authenticationManager;
@@ -58,6 +61,12 @@ public class AuthService {
 
         user = userRepository.save(user);
         log.info("User registered successfully with ID: {}", user.getId());
+
+        // Ensure a profile row exists so GET /profile does not 404 for brand-new users.
+        // All profile columns are nullable; the frontend detects the empty state and shows setup.
+        if (!userProfileRepository.existsByUserId(user.getId())) {
+            userProfileRepository.save(UserProfile.builder().userId(user.getId()).build());
+        }
 
         // Generate JWT tokens
         String accessToken = tokenProvider.generateAccessToken(user.getEmail());
