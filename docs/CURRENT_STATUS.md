@@ -1,6 +1,6 @@
 # FitTrack Pro - Current Status
 
-**Last Updated:** 2025-08-09
+**Last Updated:** 2026-08-19
 **Authoritative status file** — see `docs/README.md` for the full documentation index.
 
 ---
@@ -28,13 +28,13 @@
 - [x] Frontend: exercise library, workout session, set logging, history, workout detail modal
 - [x] Database migrations V3 (exercises), V4 (workouts), V5 (workout_sets)
 
-### Phase 3: Nutrition Tracking — PARTIALLY IMPLEMENTED (~40%)
+### Phase 3: Nutrition Tracking — COMPLETE
 - [x] Database migrations V6 (food_items, 20 seeded foods) and V7 (nutrition_logs)
 - [x] FoodItem and NutritionLog JPA entities
 - [x] Repository layer with aggregation queries
-- [ ] NutritionService — not yet implemented
-- [ ] NutritionController endpoints — not yet implemented
-- [ ] Angular nutrition components — not yet implemented
+- [x] NutritionService — implemented (log/summary/history/delete)
+- [x] NutritionController endpoints (`/api/v1/nutrition/foods/search`, `/foods/{id}`, `/foods/barcode/{barcode}`, `/logs`, `/summary`, `/logs/{id}`)
+- [x] Angular nutrition feature module (daily journal by meal type + food search)
 
 ### Phase 4: Analytics & Metrics — PARTIALLY IMPLEMENTED
 - [x] Progress dashboard component exists in frontend (`analytics/` feature module)
@@ -118,11 +118,9 @@ docker-compose down
 
 ## Known Gaps / Next Steps
 
-1. Complete NutritionService and NutritionController (Phase 3 back-end)
-2. Build Angular nutrition logging UI (Phase 3 front-end)
-3. Fully wire analytics charts in the progress dashboard (Phase 4)
-4. Expand unit test coverage (current: backend auth + workout service tests only)
-5. Add integration tests
+1. Fully wire remaining analytics charts in the progress dashboard (Phase 4)
+2. Expand integration test coverage (unit tests currently cover auth, workout, metrics, nutrition, and exception handling)
+3. AI/smart recommendations (Phase 5) — not started
 
 ---
 

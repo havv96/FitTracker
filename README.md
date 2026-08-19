@@ -130,25 +130,33 @@ The application uses Flyway migrations for database versioning:
 - **Password**: `Password123`
 
 ### API Authentication
-All authenticated endpoints require a Bearer token:
+All authenticated endpoints require a short-lived access token in the `Authorization` header:
 ```bash
-Authorization: Bearer <your-jwt-token>
+Authorization: Bearer <your-access-token>
 ```
+
+The **refresh token** is stored server-side as an `HttpOnly`, `Secure`, `SameSite=Strict` cookie
+set by `/auth/login` and `/auth/register`. To refresh the access token, `POST /api/v1/auth/refresh`
+with that cookie attached (browsers do this automatically; from `curl`, use `-b/-c` cookie jars).
+The refresh endpoint does **not** accept a refresh token in the request body or `Authorization`
+header — it reads exclusively from the cookie.
 
 ## 📡 API Endpoints
 
 ### Authentication
-- `POST /api/v1/auth/register` - Register new user
-- `POST /api/v1/auth/login` - Login user
-- `POST /api/v1/auth/refresh` - Refresh access token
+- `POST /api/v1/auth/register` - Register new user (sets refresh cookie)
+- `POST /api/v1/auth/login` - Login user (sets refresh cookie)
+- `POST /api/v1/auth/refresh` - Refresh access token (reads refresh cookie; no body required)
+- `POST /api/v1/auth/logout` - Clear the refresh cookie
 
 ### Workouts
 - `GET /api/v1/exercises` - Get all exercises
-- `GET /api/v1/exercises/search` - Search exercises with filters
-- `POST /api/v1/workouts` - Start new workout
+- `GET /api/v1/exercises/search?muscleGroup=&equipmentType=` - Search exercises with filters
+- `POST /api/v1/workouts` - Start new workout (body: `date` required)
 - `POST /api/v1/workouts/{id}/sets` - Log a set
 - `PUT /api/v1/workouts/{id}/finish` - Finish workout
-- `GET /api/v1/workouts/history` - Get workout history
+- `GET /api/v1/workouts/active` - Get in-progress workout (204 if none)
+- `GET /api/v1/workouts/history?startDate=&endDate=` - Get workout history (both dates required, ISO YYYY-MM-DD)
 - `GET /api/v1/workouts/{id}` - Get workout details
 
 ### Profile
